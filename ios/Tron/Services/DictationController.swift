@@ -243,7 +243,7 @@ final class DictationController: ObservableObject {
                 let t0 = Date()
                 try await engine.waitUntilReady()
                 let t1 = Date()
-                let raw = try await engine.transcribe(samples, language: language)
+                let raw = Corrections.apply(try await engine.transcribe(samples, language: language))
                 print("[Tron] audio=\(String(format: "%.1f", duration))s wait=\(String(format: "%.2f", t1.timeIntervalSince(t0)))s asr=\(String(format: "%.2f", Date().timeIntervalSince(t1)))s bg=\(UIApplication.shared.applicationState != .active) text=\(raw.prefix(60))")
                 guard !raw.isEmpty else {
                     finishFailed("Aucune parole détectée. L'audio n'a pas été gardé.", short: "Aucune parole détectée", startedAt: startedAt, keepAlive: keepAlive)
@@ -360,7 +360,7 @@ final class DictationController: ObservableObject {
         let language = store.language
         let session = sessionID
         previewTask = Task {
-            let text = (try? await engine.transcribe(window, language: language)) ?? ""
+            let text = Corrections.apply((try? await engine.transcribe(window, language: language)) ?? "")
             if phase == .recording, sessionID == session, !text.isEmpty {
                 liveText = trimmed ? "… " + text : text
                 // The cursor text must stay whole: past the window it simply waits for the final pass.

@@ -8,6 +8,11 @@ struct SettingsView: View {
     @State private var confirmClear = false
     @State private var confirmReset = false
 
+    private var dictionaryCount: String {
+        let n = Corrections.all().count
+        return n == 0 ? "Vide" : "\(n)"
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -22,6 +27,10 @@ struct SettingsView: View {
                         RowDivider()
                         NavigationLink { MicSessionSettingView() } label: {
                             SettingRow(title: "Micro prêt", value: store.micSession.title)
+                        }
+                        RowDivider()
+                        NavigationLink { DictionaryView() } label: {
+                            SettingRow(title: "Dictionnaire", value: dictionaryCount)
                         }
                         RowDivider()
                         NavigationLink { ActionButtonSettingView() } label: {

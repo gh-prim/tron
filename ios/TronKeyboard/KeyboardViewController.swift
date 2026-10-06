@@ -18,6 +18,13 @@ final class KeyboardViewController: UIInputViewController {
     private let accentStrip = UIStackView()
     private let tronButton = UIButton(type: .system)
     private let keysView = UIStackView()
+    /// "Corriger « … »" chip, shown while a short text is selected.
+    private let correctChip = UIButton(type: .system)
+    private let correctionBar = UIStackView()
+    private let correctionLabel = UILabel()
+    private var correcting = false
+    private var correctionHeard = ""
+    private var correctionText = ""
 
     private var layout: Layout = .letters
     private var shift: Shift = .on
@@ -75,6 +82,69 @@ final class KeyboardViewController: UIInputViewController {
 
     override func textDidChange(_ textInput: UITextInput?) {
         super.textDidChange(textInput)
+        updateAutoShift()
+        updateCorrectChip()
+    }
+
+    override func selectionDidChange(_ textInput: UITextInput?) {
+        super.selectionDidChange(textInput)
+        updateCorrectChip()
+    }
+
+    // MARK: Corrections
+
+    private var selection: String? {
+        guard let text = textDocumentProxy.selectedText?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !text.isEmpty, text.count <= 40, !text.contains("\n") else { return nil }
+        return text
+    }
+
+    private func updateCorrectChip() {
+        guard !correcting else { return }
+        if hasFullAccess, let text = selection {
+            correctChip.setTitle("Corriger « \(text) »", for: .normal)
+            correctChip.isHidden = false
+            status.isHidden = true
+        } else {
+            correctChip.isHidden = true
+            status.isHidden = !accentStrip.isHidden
+        }
+    }
+
+    @objc private func startCorrection() {
+        guard let text = selection else { return }
+        hideAccents()
+        correcting = true
+        correctionHeard = text
+        correctionText = text
+        correctChip.isHidden = true
+        status.isHidden = true
+        correctionBar.isHidden = false
+        shift = .off
+        refreshLetters()
+        refreshCorrection()
+    }
+
+    private func refreshCorrection() {
+        correctionLabel.text = correctionText + "|"
+    }
+
+    @objc private func validateCorrection() {
+        let correct = correctionText.trimmingCharacters(in: .whitespaces)
+        let heard = correctionHeard
+        endCorrection()
+        guard !correct.isEmpty else { return }
+        // Typing with a selection replaces it.
+        if correct != heard { textDocumentProxy.insertText(correct) }
+        Corrections.add(heard: heard, correct: correct)
+        showStatus("Corrigé. Tron l'écrira ainsi la prochaine fois.", color: Palette.brand, for: 3)
+    }
+
+    @objc private func endCorrection() {
+        correcting = false
+        correctionBar.isHidden = true
+        status.isHidden = false
+        updateCorrectChip()
         updateAutoShift()
     }
 
@@ -208,6 +278,13 @@ final class KeyboardViewController: UIInputViewController {
 
     private func type(_ text: String) {
         hideAccents()
+        if correcting {
+            if text == "\n" { validateCorrection(); return }
+            correctionText += text
+            if shift == .on { shift = .off; refreshLetters() }
+            refreshCorrection()
+            return
+        }
         commitMarked()
         let proxy = textDocumentProxy
         if text == " " {
@@ -229,7 +306,7 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func updateAutoShift() {
-        guard layout == .letters, shift != .locked else { return }
+        guard layout == .letters, shift != .locked, !correcting else { return }
         let type = textDocumentProxy.autocapitalizationType ?? .sentences
         var wantsCap = false
         if type == .allCharacters {
@@ -277,6 +354,11 @@ final class KeyboardViewController: UIInputViewController {
 
     @objc private func deleteDown() {
         hideAccents()
+        if correcting {
+            if !correctionText.isEmpty { correctionText.removeLast() }
+            refreshCorrection()
+            return
+        }
         commitMarked()
         textDocumentProxy.deleteBackward()
         deleteTimer?.invalidate()
@@ -355,6 +437,47 @@ final class KeyboardViewController: UIInputViewController {
         topBar.addSubview(status)
         topBar.addSubview(accentStrip)
         topBar.addSubview(tronButton)
+
+        correctChip.titleLabel?.font = .systemFont(ofSize: 13, weight: .semibold)
+        correctChip.titleLabel?.lineBreakMode = .byTruncatingMiddle
+        correctChip.setTitleColor(Palette.brand, for: .normal)
+        correctChip.backgroundColor = Palette.brandTint
+        correctChip.layer.cornerRadius = 14
+        correctChip.contentEdgeInsets = UIEdgeInsets(top: 0, left: 12, bottom: 0, right: 12)
+        correctChip.isHidden = true
+        correctChip.addTarget(self, action: #selector(startCorrection), for: .touchUpInside)
+
+        correctionLabel.font = .systemFont(ofSize: 15, weight: .medium)
+        correctionLabel.textColor = Palette.ink
+        correctionLabel.backgroundColor = Palette.surface
+        correctionLabel.layer.cornerRadius = 8
+        correctionLabel.layer.masksToBounds = true
+        correctionLabel.lineBreakMode = .byTruncatingHead
+        let cancel = UIButton(type: .system)
+        cancel.setImage(UIImage(systemName: "xmark"), for: .normal)
+        cancel.tintColor = Palette.muted
+        cancel.accessibilityLabel = "Annuler la correction"
+        cancel.addTarget(self, action: #selector(endCorrection), for: .touchUpInside)
+        let validate = UIButton(type: .system)
+        validate.setTitle("Valider", for: .normal)
+        validate.titleLabel?.font = .systemFont(ofSize: 14, weight: .semibold)
+        validate.setTitleColor(Palette.onBrand, for: .normal)
+        validate.backgroundColor = Palette.brand
+        validate.layer.cornerRadius = 14
+        validate.contentEdgeInsets = UIEdgeInsets(top: 0, left: 12, bottom: 0, right: 12)
+        validate.addTarget(self, action: #selector(validateCorrection), for: .touchUpInside)
+        for v in [cancel, correctionLabel, validate] { correctionBar.addArrangedSubview(v) }
+        correctionBar.spacing = 8
+        correctionBar.alignment = .center
+        correctionBar.isHidden = true
+        cancel.widthAnchor.constraint(equalToConstant: 28).isActive = true
+        correctionLabel.heightAnchor.constraint(equalToConstant: 30).isActive = true
+        validate.heightAnchor.constraint(equalToConstant: 28).isActive = true
+        validate.setContentHuggingPriority(.required, for: .horizontal)
+        for v in [correctChip, correctionBar] {
+            v.translatesAutoresizingMaskIntoConstraints = false
+            topBar.addSubview(v)
+        }
         view.addSubview(topBar)
         view.addSubview(keysView)
 
@@ -374,6 +497,14 @@ final class KeyboardViewController: UIInputViewController {
             accentStrip.leadingAnchor.constraint(equalTo: topBar.leadingAnchor),
             accentStrip.topAnchor.constraint(equalTo: topBar.topAnchor),
             accentStrip.bottomAnchor.constraint(equalTo: topBar.bottomAnchor),
+
+            correctChip.leadingAnchor.constraint(equalTo: topBar.leadingAnchor),
+            correctChip.centerYAnchor.constraint(equalTo: topBar.centerYAnchor),
+            correctChip.heightAnchor.constraint(equalToConstant: 28),
+            correctChip.trailingAnchor.constraint(lessThanOrEqualTo: tronButton.leadingAnchor, constant: -8),
+            correctionBar.leadingAnchor.constraint(equalTo: topBar.leadingAnchor),
+            correctionBar.centerYAnchor.constraint(equalTo: topBar.centerYAnchor),
+            correctionBar.trailingAnchor.constraint(equalTo: tronButton.leadingAnchor, constant: -8),
 
             tronButton.trailingAnchor.constraint(equalTo: topBar.trailingAnchor),
             tronButton.centerYAnchor.constraint(equalTo: topBar.centerYAnchor),
@@ -539,6 +670,7 @@ private enum Palette {
     static let muted = dynamic(0x5E6066, 0xA3A49E)
     static let brand = dynamic(0x1F4D3F, 0x7FC4A8)
     static let brandTint = dynamic(0xDCEBE3, 0x1E3A30)
+    static let onBrand = dynamic(0xFFFFFF, 0x0E1F18)
     static let live = dynamic(0xC2410C, 0xFB8A4E)
     static let onLive = dynamic(0xFFFFFF, 0x1A0C05)
 }
