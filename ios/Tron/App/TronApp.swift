@@ -8,6 +8,11 @@ struct TronApp: App {
     @StateObject private var pending = PendingLaunch.shared
     @Environment(\.scenePhase) private var scenePhase
 
+    init() {
+        // Line-buffered logs, so the console keeps them even if the app is stopped in the background.
+        setvbuf(stdout, nil, _IOLBF, 0)
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()
