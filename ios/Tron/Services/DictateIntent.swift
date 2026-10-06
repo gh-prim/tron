@@ -4,7 +4,7 @@ import Foundation
 /// "Dicter avec Tron": the shortcut users assign to the Action Button.
 /// First press starts listening in the background (Live Activity in the Dynamic Island), second press stops.
 /// The text is typed at the cursor by the Tron keyboard when it is shown, and always copied.
-struct DictateIntent: AudioRecordingIntent {
+struct DictateIntent: AudioRecordingIntent, LiveActivityIntent {
     static var title: LocalizedStringResource = "Dicter avec Tron"
     static var description = IntentDescription("Démarre ou arrête une dictée Tron sans ouvrir l'app.")
     static var openAppWhenRun = false

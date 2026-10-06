@@ -75,7 +75,10 @@ final class DictationController: ObservableObject {
         }
         let now = Date()
         // In the background, iOS only lets the mic start once the Live Activity is up.
-        if mode != .note { activity.start(startedAt: now) }
+        if mode != .note, !activity.start(startedAt: now), UIApplication.shared.applicationState != .active {
+            errorMessage = "Activez les Activités en direct pour Tron dans Réglages, puis Tron."
+            return
+        }
         do {
             try recorder.start()
         } catch {

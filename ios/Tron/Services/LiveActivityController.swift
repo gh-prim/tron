@@ -7,11 +7,13 @@ final class LiveActivityController {
     private var activity: Activity<DictationAttributes>?
     private var lastUpdate = Date.distantPast
 
-    func start(startedAt: Date) {
+    /// Returns false when iOS refused the Live Activity (needed to record in the background).
+    @discardableResult
+    func start(startedAt: Date) -> Bool {
         endAll()
         guard ActivityAuthorizationInfo().areActivitiesEnabled else {
             print("[Tron] Live Activities disabled")
-            return
+            return false
         }
         let state = DictationAttributes.ContentState(phase: .recording, startedAt: startedAt, levels: [])
         do {
@@ -20,8 +22,10 @@ final class LiveActivityController {
                 content: .init(state: state, staleDate: nil),
                 pushType: nil
             )
+            return true
         } catch {
             print("[Tron] Live Activity failed: \(error)")
+            return false
         }
     }
 
