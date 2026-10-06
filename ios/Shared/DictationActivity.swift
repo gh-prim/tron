@@ -22,8 +22,16 @@ struct StopDictationIntent: LiveActivityIntent {
     static var title: LocalizedStringResource = "Arrêter la dictée"
     static var isDiscoverable = false
 
+    /// Set by the app; runs the stop in-process so the result can reach the clipboard.
+    @MainActor static var handler: (() async -> Void)?
+
+    @MainActor
     func perform() async throws -> some IntentResult {
-        DarwinSignal.post(TronShared.Signal.stop)
+        if let handler = Self.handler {
+            await handler()
+        } else {
+            DarwinSignal.post(TronShared.Signal.stop)
+        }
         return .result()
     }
 }

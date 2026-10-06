@@ -55,6 +55,7 @@ final class DictationController: ObservableObject {
         stopObserver = DarwinObserver(TronShared.Signal.stop) { [weak self] in
             Task { @MainActor in self?.stop() }
         }
+        StopDictationIntent.handler = { await DictationController.shared.stop()?.value }
         activity.endAll()
         publish(.idle)
     }
@@ -98,7 +99,7 @@ final class DictationController: ObservableObject {
         publish(.recording)
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
 
-        ticker = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
+        ticker = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.tick() }
         }
     }
@@ -114,8 +115,10 @@ final class DictationController: ObservableObject {
         publish(.idle)
     }
 
-    func stop() {
-        guard phase == .recording else { return }
+    /// Returns the transcription task, so an intent can wait for it and write the clipboard while it runs.
+    @discardableResult
+    func stop() -> Task<Void, Never>? {
+        guard phase == .recording else { return nil }
         stopTimers()
         let samples = recorder.stop()
         let duration = Double(samples.count) / AudioRecorder.sampleRate
@@ -128,7 +131,7 @@ final class DictationController: ObservableObject {
             errorMessage = "Enregistrement trop court."
             activity.finish(.failed, message: "Enregistrement trop court", startedAt: startedAt)
             publish(.idle)
-            return
+            return nil
         }
 
         publish(.transcribing)
@@ -141,7 +144,7 @@ final class DictationController: ObservableObject {
             UIApplication.shared.endBackgroundTask(backgroundTask)
             backgroundTask = .invalid
         }
-        Task {
+        return Task {
             defer {
                 if backgroundTask != .invalid { UIApplication.shared.endBackgroundTask(backgroundTask) }
             }

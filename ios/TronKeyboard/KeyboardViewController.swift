@@ -13,14 +13,15 @@ final class KeyboardViewController: UIInputViewController {
         buildLayout()
         observers = [
             DarwinObserver(TronShared.Signal.state) { [weak self] in self?.refresh() },
-            DarwinObserver(TronShared.Signal.result) { [weak self] in self?.insertPendingResult() },
+            DarwinObserver(TronShared.Signal.result) { [weak self] in self?.insertPendingResult(maxAge: 30) },
         ]
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         refresh()
-        insertPendingResult()
+        // Only a result that just finished: an older one stays in the clipboard.
+        insertPendingResult(maxAge: 5)
     }
 
     override func viewWillLayoutSubviews() {
@@ -47,14 +48,14 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     /// Types the last dictation at the cursor, once, if it is recent and meant for the keyboard.
-    private func insertPendingResult() {
+    private func insertPendingResult(maxAge: TimeInterval) {
         guard hasFullAccess else { return }
         let d = TronShared.defaults
         guard d.bool(forKey: TronShared.Key.resultForKeyboard),
               let id = d.string(forKey: TronShared.Key.resultID),
               id != d.string(forKey: TronShared.Key.insertedID),
               let text = d.string(forKey: TronShared.Key.resultText), !text.isEmpty,
-              Date().timeIntervalSince1970 - d.double(forKey: TronShared.Key.resultAt) < 120
+              Date().timeIntervalSince1970 - d.double(forKey: TronShared.Key.resultAt) < maxAge
         else { refresh(); return }
         d.set(id, forKey: TronShared.Key.insertedID)
         var insert = text

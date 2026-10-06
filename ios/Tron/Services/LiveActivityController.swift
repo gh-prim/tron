@@ -29,9 +29,9 @@ final class LiveActivityController {
         }
     }
 
-    /// Throttled to about two updates a second.
+    /// About five updates a second, so the bars follow the voice.
     func update(levels: [Float], startedAt: Date) {
-        guard let activity, Date().timeIntervalSince(lastUpdate) >= 0.5 else { return }
+        guard let activity, Date().timeIntervalSince(lastUpdate) >= 0.2 else { return }
         lastUpdate = Date()
         let state = DictationAttributes.ContentState(
             phase: .recording,
@@ -63,13 +63,8 @@ final class LiveActivityController {
         }
     }
 
+    /// The last `count` levels (about 1 s of audio), with a curve that makes speech clearly visible.
     private static func downsample(_ levels: [Float], to count: Int) -> [Double] {
-        let recent = Array(levels.suffix(count * 3))
-        guard !recent.isEmpty else { return [] }
-        let size = max(1, recent.count / count)
-        return stride(from: 0, to: recent.count, by: size).map { i in
-            let chunk = recent[i..<min(i + size, recent.count)]
-            return Double(chunk.max() ?? 0)
-        }
+        levels.suffix(count).map { Double(pow(max(0, min(1, $0)), 0.7)) }
     }
 }
