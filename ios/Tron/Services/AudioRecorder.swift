@@ -29,8 +29,15 @@ final class AudioRecorder {
         lock.lock(); samples.removeAll(keepingCapacity: true); lock.unlock()
 
         let session = AVAudioSession.sharedInstance()
-        try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker])
-        try session.setActive(true)
+        do {
+            try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetoothHFP])
+            try session.setActive(true)
+        } catch {
+            // In the background iOS may refuse to interrupt other audio; record alongside it instead.
+            print("[Tron] audio session: \(error), retrying mixable")
+            try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetoothHFP, .mixWithOthers])
+            try session.setActive(true)
+        }
 
         let input = engine.inputNode
         let inputFormat = input.outputFormat(forBus: 0)

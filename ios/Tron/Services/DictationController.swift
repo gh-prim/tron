@@ -73,21 +73,26 @@ final class DictationController: ObservableObject {
             // Loads the model from cache when the app was launched in the background.
             engine.prepare()
         }
+        let now = Date()
+        // In the background, iOS only lets the mic start once the Live Activity is up.
+        if mode != .note { activity.start(startedAt: now) }
         do {
             try recorder.start()
         } catch {
+            print("[Tron] mic start failed: \(error)")
+            if mode != .note { activity.endAll() }
             errorMessage = "Le micro n'a pas pu démarrer. \(error.localizedDescription)"
             return
         }
+        print("[Tron] start mode=\(mode) state=\(UIApplication.shared.applicationState.rawValue) engine=\(engine.state)")
         self.mode = mode
         levels = []
         liveText = ""
         elapsed = 0
-        startedAt = Date()
+        startedAt = now
         lastPreview = .distantPast
         phase = .recording
         publish(.recording)
-        if mode != .note { activity.start(startedAt: startedAt) }
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
 
         ticker = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
@@ -139,8 +144,11 @@ final class DictationController: ObservableObject {
             }
             await previewTask?.value
             do {
+                let t0 = Date()
                 try await engine.waitUntilReady()
+                let t1 = Date()
                 let raw = try await engine.transcribe(samples, language: language)
+                print("[Tron] audio=\(String(format: "%.1f", duration))s wait=\(String(format: "%.2f", t1.timeIntervalSince(t0)))s asr=\(String(format: "%.2f", Date().timeIntervalSince(t1)))s bg=\(UIApplication.shared.applicationState != .active) text=\(raw.prefix(60))")
                 guard !raw.isEmpty else {
                     finishFailed("Aucune parole détectée. L'audio n'a pas été gardé.", short: "Aucune parole détectée", startedAt: startedAt)
                     return
@@ -174,6 +182,7 @@ final class DictationController: ObservableObject {
                 }
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
             } catch {
+                print("[Tron] transcription error: \(error)")
                 finishFailed("La transcription a échoué. \(error.localizedDescription)", short: "La transcription a échoué", startedAt: startedAt)
                 return
             }

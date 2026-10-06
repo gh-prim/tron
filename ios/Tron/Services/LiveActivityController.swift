@@ -9,13 +9,20 @@ final class LiveActivityController {
 
     func start(startedAt: Date) {
         endAll()
-        guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
+        guard ActivityAuthorizationInfo().areActivitiesEnabled else {
+            print("[Tron] Live Activities disabled")
+            return
+        }
         let state = DictationAttributes.ContentState(phase: .recording, startedAt: startedAt, levels: [])
-        activity = try? Activity.request(
-            attributes: DictationAttributes(),
-            content: .init(state: state, staleDate: nil),
-            pushType: nil
-        )
+        do {
+            activity = try Activity.request(
+                attributes: DictationAttributes(),
+                content: .init(state: state, staleDate: nil),
+                pushType: nil
+            )
+        } catch {
+            print("[Tron] Live Activity failed: \(error)")
+        }
     }
 
     /// Throttled to about two updates a second.
