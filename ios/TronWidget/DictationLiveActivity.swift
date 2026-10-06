@@ -1,0 +1,164 @@
+import ActivityKit
+import AppIntents
+import SwiftUI
+import WidgetKit
+
+/// Dictation in progress, shown in the Dynamic Island and on the Lock Screen.
+struct DictationLiveActivity: Widget {
+    var body: some WidgetConfiguration {
+        ActivityConfiguration(for: DictationAttributes.self) { context in
+            LockScreenView(state: context.state)
+                .activityBackgroundTint(TronColor.surface)
+                .activitySystemActionForegroundColor(TronColor.ink)
+        } dynamicIsland: { context in
+            let state = context.state
+            return DynamicIsland {
+                DynamicIslandExpandedRegion(.leading) {
+                    MiniMark(height: 22)
+                        .padding(.leading, Space.s1)
+                        .padding(.top, Space.s1)
+                }
+                DynamicIslandExpandedRegion(.trailing) {
+                    if state.phase == .recording {
+                        Text(timerInterval: state.startedAt...Date.distantFuture, countsDown: false)
+                            .font(TronFont.meta)
+                            .monospacedDigit()
+                            .foregroundStyle(TronColor.live)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 52)
+                            .padding(.top, Space.s1)
+                    }
+                }
+                DynamicIslandExpandedRegion(.bottom) {
+                    HStack(spacing: Space.s3) {
+                        StatusView(state: state, large: true)
+                        Spacer(minLength: 0)
+                        if state.phase == .recording { StopButton() }
+                    }
+                    .padding(.horizontal, Space.s1)
+                }
+            } compactLeading: {
+                MiniMark(height: 14)
+            } compactTrailing: {
+                switch state.phase {
+                case .recording:
+                    Levels(levels: state.levels, count: 5, height: 14)
+                case .transcribing:
+                    ProgressView().tint(TronColor.live).scaleEffect(0.6)
+                case .done:
+                    Image(systemName: "checkmark").foregroundStyle(TronColor.brand)
+                case .failed:
+                    Image(systemName: "exclamationmark").foregroundStyle(TronColor.danger)
+                }
+            } minimal: {
+                Circle().fill(state.phase == .recording ? TronColor.live : TronColor.brand).frame(width: 10, height: 10)
+            }
+            .keylineTint(TronColor.live)
+        }
+    }
+}
+
+private struct LockScreenView: View {
+    let state: DictationAttributes.ContentState
+
+    var body: some View {
+        HStack(spacing: Space.s3) {
+            MiniMark(height: 26)
+            StatusView(state: state, large: false)
+            Spacer(minLength: 0)
+            if state.phase == .recording {
+                Text(timerInterval: state.startedAt...Date.distantFuture, countsDown: false)
+                    .font(TronFont.meta)
+                    .monospacedDigit()
+                    .foregroundStyle(TronColor.live)
+                    .frame(width: 44)
+                StopButton()
+            }
+        }
+        .padding(Space.s4)
+    }
+}
+
+private struct StatusView: View {
+    let state: DictationAttributes.ContentState
+    let large: Bool
+
+    var body: some View {
+        switch state.phase {
+        case .recording:
+            HStack(spacing: Space.s2) {
+                Levels(levels: state.levels, count: large ? 16 : 12, height: large ? 26 : 20)
+                Text("Écoute")
+                    .font(TronFont.label)
+                    .foregroundStyle(TronColor.ink)
+            }
+        case .transcribing:
+            label("Transcription…", color: TronColor.muted)
+        case .done:
+            label(state.message ?? "Texte prêt", color: TronColor.brand)
+        case .failed:
+            label(state.message ?? "La dictée a échoué", color: TronColor.danger)
+        }
+    }
+
+    private func label(_ text: String, color: Color) -> some View {
+        Text(text).font(TronFont.label).foregroundStyle(color).lineLimit(1)
+    }
+}
+
+private struct StopButton: View {
+    var body: some View {
+        Button(intent: StopDictationIntent()) {
+            Image(systemName: "stop.fill")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(TronColor.onLive)
+                .frame(width: 36, height: 36)
+                .background(Circle().fill(TronColor.live))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Arrêter la dictée")
+    }
+}
+
+/// Live level bars in the live color.
+private struct Levels: View {
+    let levels: [Double]
+    let count: Int
+    let height: CGFloat
+
+    var body: some View {
+        let values = Array((Array(repeating: 0.0, count: count) + levels).suffix(count))
+        HStack(alignment: .center, spacing: 2) {
+            ForEach(values.indices, id: \.self) { i in
+                Capsule()
+                    .fill(TronColor.live)
+                    .frame(width: 3, height: max(3, height * values[i]))
+            }
+        }
+        .frame(height: height)
+        .accessibilityHidden(true)
+    }
+}
+
+/// The Tron mark: four brand bars and the live dot.
+private struct MiniMark: View {
+    let height: CGFloat
+    private let bars: [CGFloat] = [15, 30, 45, 25]
+
+    var body: some View {
+        let unit = height / 45
+        HStack(alignment: .center, spacing: 3.75 * unit) {
+            ForEach(bars.indices, id: \.self) { i in
+                Capsule()
+                    .fill(TronColor.brand)
+                    .frame(width: 7.5 * unit, height: bars[i] * unit)
+            }
+            Circle()
+                .fill(TronColor.live)
+                .frame(width: 11.24 * unit, height: 11.24 * unit)
+                .padding(.leading, 3 * unit)
+        }
+        .frame(height: height)
+        .accessibilityHidden(true)
+    }
+}

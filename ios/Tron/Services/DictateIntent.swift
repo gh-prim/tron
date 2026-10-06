@@ -2,17 +2,39 @@ import AppIntents
 import Foundation
 
 /// "Dicter avec Tron": the shortcut users assign to the Action Button.
-/// It opens Tron and starts listening right away. In this test build the text is copied to the clipboard;
-/// the Tron mini keyboard (auto-insert at the cursor) comes with the keyboard extension.
-struct DictateIntent: AppIntent {
+/// First press starts listening in the background (Live Activity in the Dynamic Island), second press stops.
+/// The text is typed at the cursor by the Tron keyboard when it is shown, and always copied.
+struct DictateIntent: AudioRecordingIntent {
     static var title: LocalizedStringResource = "Dicter avec Tron"
-    static var description = IntentDescription("Démarre une dictée Tron. Le texte est copié, prêt à coller.")
-    static var openAppWhenRun = true
+    static var description = IntentDescription("Démarre ou arrête une dictée Tron sans ouvrir l'app.")
+    static var openAppWhenRun = false
 
     @MainActor
     func perform() async throws -> some IntentResult {
-        PendingLaunch.shared.dictateRequested = true
+        let dictation = DictationController.shared
+        if dictation.isRecording {
+            dictation.stop()
+            return .result()
+        }
+        guard AudioRecorder.permissionGranted else { throw DictateError.noMicrophone }
+        dictation.start(mode: .actionButton)
+        if let message = dictation.errorMessage, !dictation.isRecording {
+            dictation.errorMessage = nil
+            throw DictateError.failed(message)
+        }
         return .result()
+    }
+
+    enum DictateError: Error, CustomLocalizedStringResourceConvertible {
+        case noMicrophone
+        case failed(String)
+
+        var localizedStringResource: LocalizedStringResource {
+            switch self {
+            case .noMicrophone: return "Ouvrez Tron une fois pour autoriser le micro."
+            case .failed(let message): return "\(message)"
+            }
+        }
     }
 }
 
@@ -27,7 +49,7 @@ struct TronShortcuts: AppShortcutsProvider {
     }
 }
 
-/// Bridges the intent to the UI.
+/// Bridges a tron://dictate launch (Tron keyboard mic key) to the UI.
 @MainActor
 final class PendingLaunch: ObservableObject {
     static let shared = PendingLaunch()

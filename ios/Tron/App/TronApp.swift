@@ -2,9 +2,9 @@ import SwiftUI
 
 @main
 struct TronApp: App {
-    @StateObject private var store = AppStore()
+    @StateObject private var store = AppStore.shared
     @StateObject private var engine = TranscriptionEngine.shared
-    @StateObject private var dictation = DictationController()
+    @StateObject private var dictation = DictationController.shared
     @StateObject private var pending = PendingLaunch.shared
 
     var body: some Scene {
@@ -16,9 +16,12 @@ struct TronApp: App {
                 .environmentObject(pending)
                 .tint(TronColor.brand)
                 .onAppear {
-                    dictation.attach(store)
                     // Start the model download early, during onboarding.
                     engine.prepare()
+                }
+                .onOpenURL { url in
+                    // tron://dictate, sent by the mic key of the Tron keyboard.
+                    if url.host == "dictate" { pending.dictateRequested = true }
                 }
         }
     }

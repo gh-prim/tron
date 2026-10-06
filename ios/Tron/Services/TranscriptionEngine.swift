@@ -52,6 +52,17 @@ final class TranscriptionEngine: ObservableObject {
         }
     }
 
+    /// Waits for `prepare()` to finish (model loaded from cache in the background path).
+    func waitUntilReady(timeout: TimeInterval = 90) async throws {
+        prepare()
+        let deadline = Date().addingTimeInterval(timeout)
+        while !isReady {
+            if case .failed(let message) = state { throw EngineError.failed(message) }
+            if Date() > deadline { throw EngineError.notReady }
+            try await Task.sleep(for: .milliseconds(100))
+        }
+    }
+
     func retry() {
         guard case .failed = state else { return }
         state = .idle
@@ -71,6 +82,12 @@ final class TranscriptionEngine: ObservableObject {
 
     enum EngineError: LocalizedError {
         case notReady
-        var errorDescription: String? { "Le modèle n'est pas encore prêt." }
+        case failed(String)
+        var errorDescription: String? {
+            switch self {
+            case .notReady: return "Le modèle n'est pas encore prêt."
+            case .failed(let message): return message
+            }
+        }
     }
 }

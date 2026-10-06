@@ -4,13 +4,26 @@ import SwiftUI
 /// Profile, settings, notes and history. Everything stays on the device (no Supabase in this build).
 @MainActor
 final class AppStore: ObservableObject {
+    /// One store for the UI and for dictations started in the background (Action Button).
+    static let shared = AppStore()
+
     private let defaults = UserDefaults.standard
 
     @Published var onboardingDone: Bool { didSet { defaults.set(onboardingDone, forKey: "onboardingDone") } }
     @Published var firstName: String { didSet { defaults.set(firstName, forKey: "firstName") } }
-    @Published var languageCode: String { didSet { defaults.set(languageCode, forKey: "language") } }
+    @Published var languageCode: String {
+        didSet {
+            defaults.set(languageCode, forKey: "language")
+            TronShared.defaults.set(languageCode, forKey: TronShared.Key.language)
+        }
+    }
     @Published var micGranted: Bool { didSet { defaults.set(micGranted, forKey: "micGranted") } }
-    @Published var actionButtonModeRaw: String { didSet { defaults.set(actionButtonModeRaw, forKey: "actionButtonMode") } }
+    @Published var actionButtonModeRaw: String {
+        didSet {
+            defaults.set(actionButtonModeRaw, forKey: "actionButtonMode")
+            TronShared.defaults.set(actionButtonModeRaw, forKey: TronShared.Key.actionButtonMode)
+        }
+    }
     @Published var historyRetentionRaw: String { didSet { defaults.set(historyRetentionRaw, forKey: "historyRetention") } }
     @Published var analyticsOptIn: Bool { didSet { defaults.set(analyticsOptIn, forKey: "analyticsOptIn") } }
 
@@ -35,7 +48,7 @@ final class AppStore: ObservableObject {
         }
     }
 
-    init() {
+    private init() {
         let d = UserDefaults.standard
         onboardingDone = d.bool(forKey: "onboardingDone")
         firstName = d.string(forKey: "firstName") ?? ""
@@ -44,6 +57,8 @@ final class AppStore: ObservableObject {
         actionButtonModeRaw = d.string(forKey: "actionButtonMode") ?? ActionButtonMode.miniKeyboard.rawValue
         historyRetentionRaw = d.string(forKey: "historyRetention") ?? HistoryRetention.month.rawValue
         analyticsOptIn = d.bool(forKey: "analyticsOptIn")
+        TronShared.defaults.set(languageCode, forKey: TronShared.Key.language)
+        TronShared.defaults.set(actionButtonModeRaw, forKey: TronShared.Key.actionButtonMode)
         notes = Self.load([Note].self, from: Self.notesURL) ?? []
         history = Self.load([HistoryItem].self, from: Self.historyURL) ?? []
         pruneHistory()

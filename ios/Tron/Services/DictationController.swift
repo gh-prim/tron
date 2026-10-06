@@ -4,11 +4,15 @@ import UIKit
 /// Drives one recording: mic capture, live preview text, final transcription and saving.
 @MainActor
 final class DictationController: ObservableObject {
+    static let shared = DictationController()
+
     enum Mode {
         /// Big button in the app: creates a note.
         case note
-        /// Started from the Action Button shortcut: text goes to the clipboard and history.
+        /// Action Button shortcut, in the background: text goes to the Tron keyboard or the clipboard.
         case actionButton
+        /// Mic key of the Tron keyboard (opens the app): text goes back to the keyboard.
+        case keyboard
     }
 
     enum Phase: Equatable {
@@ -25,27 +29,35 @@ final class DictationController: ObservableObject {
     @Published var errorMessage: String?
     /// Set when a note was just created, so the UI can open it.
     @Published var lastNote: Note?
-    /// Set when an Action Button dictation was copied.
+    /// Set when an Action Button or keyboard dictation was copied.
     @Published var lastCopied: HistoryItem?
 
     private let recorder = AudioRecorder()
     private let engine: TranscriptionEngine
-    private weak var store: AppStore?
+    private let activity = LiveActivityController()
+    private let store: AppStore
     private var ticker: Timer?
     private var previewTask: Task<Void, Never>?
     private var startedAt = Date()
     private var lastPreview = Date.distantPast
+    private var lastHeartbeat = Date.distantPast
+    private var stopObserver: DarwinObserver?
 
-    init(engine: TranscriptionEngine = .shared) {
-        self.engine = engine
+    private init() {
+        engine = TranscriptionEngine.shared
+        store = AppStore.shared
         recorder.onLevel = { [weak self] level in
             guard let self else { return }
             self.levels.append(level)
             if self.levels.count > 120 { self.levels.removeFirst(self.levels.count - 120) }
         }
+        // Stop button of the Live Activity.
+        stopObserver = DarwinObserver(TronShared.Signal.stop) { [weak self] in
+            Task { @MainActor in self?.stop() }
+        }
+        activity.endAll()
+        publish(.idle)
     }
-
-    func attach(_ store: AppStore) { self.store = store }
 
     var isRecording: Bool { phase == .recording }
 
@@ -55,9 +67,11 @@ final class DictationController: ObservableObject {
             errorMessage = "Tron n'a pas accès au micro. Autorisez-le dans Réglages, puis Tron."
             return
         }
-        guard engine.isReady else {
-            errorMessage = "Le modèle se prépare encore. Réessayez dans un instant."
-            return
+        if case .failed = engine.state {
+            engine.retry()
+        } else {
+            // Loads the model from cache when the app was launched in the background.
+            engine.prepare()
         }
         do {
             try recorder.start()
@@ -72,6 +86,8 @@ final class DictationController: ObservableObject {
         startedAt = Date()
         lastPreview = .distantPast
         phase = .recording
+        publish(.recording)
+        if mode != .note { activity.start(startedAt: startedAt) }
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
 
         ticker = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
@@ -86,6 +102,8 @@ final class DictationController: ObservableObject {
         phase = .idle
         liveText = ""
         levels = []
+        activity.endAll()
+        publish(.idle)
     }
 
     func stop() {
@@ -93,24 +111,38 @@ final class DictationController: ObservableObject {
         stopTimers()
         let samples = recorder.stop()
         let duration = Double(samples.count) / AudioRecorder.sampleRate
+        let startedAt = self.startedAt
         phase = .finishing
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
 
         guard duration >= 0.4 else {
             phase = .idle
             errorMessage = "Enregistrement trop court."
+            activity.finish(.failed, message: "Enregistrement trop court", startedAt: startedAt)
+            publish(.idle)
             return
         }
 
-        let language = store?.language ?? .fr
+        publish(.transcribing)
+        activity.transcribing(startedAt: startedAt)
+        let language = store.language
         let mode = self.mode
+        // Keeps the process alive while Parakeet runs after the mic stops in the background.
+        var backgroundTask = UIBackgroundTaskIdentifier.invalid
+        backgroundTask = UIApplication.shared.beginBackgroundTask(withName: "Transcription") {
+            UIApplication.shared.endBackgroundTask(backgroundTask)
+            backgroundTask = .invalid
+        }
         Task {
+            defer {
+                if backgroundTask != .invalid { UIApplication.shared.endBackgroundTask(backgroundTask) }
+            }
             await previewTask?.value
             do {
+                try await engine.waitUntilReady()
                 let raw = try await engine.transcribe(samples, language: language)
                 guard !raw.isEmpty else {
-                    phase = .idle
-                    errorMessage = "Aucune parole détectée. L'audio n'a pas été gardé."
+                    finishFailed("Aucune parole détectée. L'audio n'a pas été gardé.", short: "Aucune parole détectée", startedAt: startedAt)
                     return
                 }
                 let cleaned = TextCleaner.clean(raw)
@@ -128,26 +160,66 @@ final class DictationController: ObservableObject {
                         audioFileName: fileName,
                         language: language.rawValue
                     )
-                    store?.add(note)
+                    store.add(note)
                     lastNote = note
-                case .actionButton:
+                case .actionButton, .keyboard:
                     UIPasteboard.general.string = cleaned
-                    let item = HistoryItem(text: cleaned, duration: duration, source: "Bouton Action")
-                    store?.addHistory(item)
+                    let source = mode == .keyboard ? "Clavier Tron" : "Bouton Action"
+                    let item = HistoryItem(text: cleaned, duration: duration, source: source)
+                    store.addHistory(item)
+                    let forKeyboard = mode == .keyboard || store.actionButtonMode == .miniKeyboard
+                    publishResult(item, forKeyboard: forKeyboard)
+                    activity.finish(.done, message: forKeyboard ? "Texte prêt" : "Copié, prêt à coller", startedAt: startedAt)
                     lastCopied = item
                 }
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
             } catch {
-                errorMessage = "La transcription a échoué. \(error.localizedDescription)"
+                finishFailed("La transcription a échoué. \(error.localizedDescription)", short: "La transcription a échoué", startedAt: startedAt)
+                return
             }
             liveText = ""
             phase = .idle
+            publish(.idle)
         }
+    }
+
+    private func finishFailed(_ message: String, short: String, startedAt: Date) {
+        errorMessage = message
+        activity.finish(.failed, message: short, startedAt: startedAt)
+        liveText = ""
+        phase = .idle
+        publish(.idle)
+    }
+
+    // MARK: App Group
+
+    private func publish(_ state: TronShared.State) {
+        let d = TronShared.defaults
+        d.set(state.rawValue, forKey: TronShared.Key.state)
+        d.set(Date().timeIntervalSince1970, forKey: TronShared.Key.stateAt)
+        DarwinSignal.post(TronShared.Signal.state)
+    }
+
+    private func publishResult(_ item: HistoryItem, forKeyboard: Bool) {
+        let d = TronShared.defaults
+        d.set(item.id.uuidString, forKey: TronShared.Key.resultID)
+        d.set(item.text, forKey: TronShared.Key.resultText)
+        d.set(Date().timeIntervalSince1970, forKey: TronShared.Key.resultAt)
+        d.set(forKeyboard, forKey: TronShared.Key.resultForKeyboard)
+        DarwinSignal.post(TronShared.Signal.result)
     }
 
     private func tick() {
         guard phase == .recording else { return }
         elapsed = Date().timeIntervalSince(startedAt)
+        if mode != .note { activity.update(levels: levels, startedAt: startedAt) }
+        // Heartbeat for the keyboard, about once a second.
+        if Date().timeIntervalSince(lastHeartbeat) >= 1 {
+            lastHeartbeat = Date()
+            publish(.recording)
+        }
+        // No live preview in the background: it would only slow down the final pass.
+        guard UIApplication.shared.applicationState == .active, engine.isReady else { return }
         // Refresh the live text about every 1.5 s, one pass at a time.
         guard previewTask == nil, elapsed >= 1.2, Date().timeIntervalSince(lastPreview) >= 1.5 else { return }
         lastPreview = Date()
@@ -156,7 +228,7 @@ final class DictationController: ObservableObject {
         let maxSamples = Int(40 * AudioRecorder.sampleRate)
         let window = all.count > maxSamples ? Array(all.suffix(maxSamples)) : all
         let trimmed = all.count > maxSamples
-        let language = store?.language ?? .fr
+        let language = store.language
         previewTask = Task {
             let text = (try? await engine.transcribe(window, language: language)) ?? ""
             if phase == .recording, !text.isEmpty {

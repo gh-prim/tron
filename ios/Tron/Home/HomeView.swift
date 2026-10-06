@@ -50,7 +50,11 @@ struct HomeView: View {
         .onChange(of: dictation.lastCopied) { _, item in
             if item != nil {
                 tab = .history
-                show("Copié. Retournez dans votre app, touchez le champ, puis Coller.")
+                if dictation.mode == .keyboard {
+                    show("Texte prêt. Retournez dans votre app, le clavier Tron l'écrit au curseur.")
+                } else {
+                    show("Copié. Retournez dans votre app, touchez le champ, puis Coller.")
+                }
             }
         }
         .onChange(of: dictation.errorMessage) { _, message in
@@ -122,11 +126,11 @@ struct HomeView: View {
     private var heroTitle: String {
         switch dictation.phase {
         case .idle: return "Nouvelle note"
-        case .finishing: return dictation.mode == .actionButton ? "Transcription…" : "Création de la note…"
+        case .finishing: return dictation.mode != .note ? "Transcription…" : "Création de la note…"
         case .recording:
             if willCancel { return "Relâchez pour annuler" }
             if holding { return "Relâchez pour enregistrer" }
-            return dictation.mode == .actionButton ? "Touchez pour copier" : "Touchez pour terminer"
+            return dictation.mode != .note ? "Touchez pour copier" : "Touchez pour terminer"
         }
     }
 
@@ -237,9 +241,9 @@ struct HomeView: View {
     }
 
     private func startPendingDictation() {
-        guard pending.dictateRequested, engine.isReady, dictation.phase == .idle else { return }
+        guard pending.dictateRequested, dictation.phase == .idle else { return }
         pending.dictateRequested = false
-        dictation.start(mode: .actionButton)
+        dictation.start(mode: .keyboard)
     }
 
     private func format(_ t: TimeInterval) -> String {
