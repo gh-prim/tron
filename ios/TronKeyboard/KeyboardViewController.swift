@@ -345,6 +345,8 @@ final class KeyboardViewController: UIInputViewController {
             let row = UIStackView()
             row.spacing = 6
             row.distribution = index < 2 ? .fillEqually : .fill
+            // In the hierarchy first: key widths are tied to a key of the first row.
+            keysView.addArrangedSubview(row)
             var specials: [UIView] = []
             for key in keys {
                 let b = makeKey(key)
@@ -371,7 +373,6 @@ final class KeyboardViewController: UIInputViewController {
             if specials.count == 2 {
                 specials[0].widthAnchor.constraint(equalTo: specials[1].widthAnchor).isActive = true
             }
-            keysView.addArrangedSubview(row)
         }
         refreshLetters()
     }
@@ -388,7 +389,8 @@ final class KeyboardViewController: UIInputViewController {
                 b.addGestureRecognizer(UILongPressGestureRecognizer(target: self, action: #selector(longPress(_:))))
             }
         case .space:
-            b.setTitle("espace", for: .normal)
+            b.setTitle("Tron", for: .normal)
+            b.accessibilityLabel = "Espace"
             b.titleLabel?.font = .systemFont(ofSize: 16)
             style(b, special: false)
         case .returnKey:
