@@ -10,12 +10,12 @@ struct DictateIntent: AudioRecordingIntent, LiveActivityIntent {
     static var openAppWhenRun = false
 
     @MainActor
-    func perform() async throws -> some IntentResult {
+    func perform() async throws -> some IntentResult & ReturnsValue<String> {
         let dictation = DictationController.shared
         if dictation.isRecording {
-            // Waiting keeps the intent running, so iOS lets Tron write the clipboard from the background.
             await dictation.stop()?.value
-            return .result()
+            // Empty when nothing was heard. A personal shortcut can pass it to "Copier dans le presse-papiers".
+            return .result(value: dictation.lastResultText)
         }
         guard AudioRecorder.permissionGranted else { throw DictateError.noMicrophone }
         dictation.start(mode: .actionButton)
@@ -23,7 +23,7 @@ struct DictateIntent: AudioRecordingIntent, LiveActivityIntent {
             dictation.errorMessage = nil
             throw DictateError.failed(message)
         }
-        return .result()
+        return .result(value: "")
     }
 
     enum DictateError: Error, CustomLocalizedStringResourceConvertible {

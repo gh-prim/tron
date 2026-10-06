@@ -63,6 +63,7 @@ final class KeyboardViewController: UIInputViewController {
             insert = " " + insert
         }
         textDocumentProxy.insertText(insert)
+        DarwinSignal.post(TronShared.Signal.inserted)
         status.text = "Texte inséré."
         status.textColor = Palette.brand
     }

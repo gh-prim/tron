@@ -38,17 +38,27 @@ struct DictationLiveActivity: Widget {
                     .padding(.horizontal, Space.s1)
                 }
             } compactLeading: {
-                MiniMark(height: 14)
+                switch state.phase {
+                case .recording:
+                    // The waveform runs across the whole island: older half on the left, newest on the right.
+                    Levels(levels: Array(padded(state.levels, 16).prefix(8)), count: 8, height: 18)
+                case .transcribing:
+                    MiniMark(height: 14)
+                case .done:
+                    Image(systemName: "checkmark.circle.fill").foregroundStyle(TronColor.brand)
+                case .failed:
+                    Image(systemName: "exclamationmark.circle.fill").foregroundStyle(TronColor.danger)
+                }
             } compactTrailing: {
                 switch state.phase {
                 case .recording:
-                    Levels(levels: state.levels, count: 5, height: 14)
+                    Levels(levels: Array(padded(state.levels, 16).suffix(8)), count: 8, height: 18)
                 case .transcribing:
-                    ProgressView().tint(TronColor.live).scaleEffect(0.6)
+                    ProgressView().progressViewStyle(.circular).tint(TronColor.live).scaleEffect(0.7)
                 case .done:
-                    Image(systemName: "checkmark").foregroundStyle(TronColor.brand)
+                    Text(state.message ?? "Prêt").font(TronFont.label).foregroundStyle(TronColor.brand)
                 case .failed:
-                    Image(systemName: "exclamationmark").foregroundStyle(TronColor.danger)
+                    Text("Échec").font(TronFont.label).foregroundStyle(TronColor.danger)
                 }
             } minimal: {
                 Circle().fill(state.phase == .recording ? TronColor.live : TronColor.brand).frame(width: 10, height: 10)
@@ -118,6 +128,10 @@ private struct StopButton: View {
         .buttonStyle(.plain)
         .accessibilityLabel("Arrêter la dictée")
     }
+}
+
+private func padded(_ levels: [Double], _ count: Int) -> [Double] {
+    Array((Array(repeating: 0.0, count: count) + levels).suffix(count))
 }
 
 /// Live level bars in the live color.

@@ -51,8 +51,11 @@ final class LiveActivityController {
         guard let activity else { return }
         self.activity = nil
         let state = DictationAttributes.ContentState(phase: phase, startedAt: startedAt, levels: [], message: message)
+        // Ended activities leave the Dynamic Island at once, so the result stays visible a moment first.
         Task {
-            await activity.end(.init(state: state, staleDate: nil), dismissalPolicy: .after(Date().addingTimeInterval(4)))
+            await activity.update(.init(state: state, staleDate: nil))
+            try? await Task.sleep(for: .seconds(2.5))
+            await activity.end(.init(state: state, staleDate: nil), dismissalPolicy: .immediate)
         }
     }
 

@@ -28,6 +28,8 @@ enum TronShared {
         static let stop = "app.tron.ios.stop"
         static let state = "app.tron.ios.state"
         static let result = "app.tron.ios.result"
+        /// Posted by the keyboard once it typed the result.
+        static let inserted = "app.tron.ios.inserted"
     }
 
     enum State: String {

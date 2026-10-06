@@ -42,6 +42,10 @@ final class DictationController: ObservableObject {
     private var lastPreview = Date.distantPast
     private var lastHeartbeat = Date.distantPast
     private var stopObserver: DarwinObserver?
+    private var insertedObserver: DarwinObserver?
+    private var keyboardInserted = false
+    /// Text of the last Action Button or keyboard dictation, returned by the intent.
+    private(set) var lastResultText = ""
 
     private init() {
         engine = TranscriptionEngine.shared
@@ -54,6 +58,9 @@ final class DictationController: ObservableObject {
         // Stop button of the Live Activity.
         stopObserver = DarwinObserver(TronShared.Signal.stop) { [weak self] in
             Task { @MainActor in self?.stop() }
+        }
+        insertedObserver = DarwinObserver(TronShared.Signal.inserted) { [weak self] in
+            Task { @MainActor in self?.keyboardInserted = true }
         }
         StopDictationIntent.handler = { await DictationController.shared.stop()?.value }
         activity.endAll()
@@ -136,6 +143,8 @@ final class DictationController: ObservableObject {
 
         publish(.transcribing)
         activity.transcribing(startedAt: startedAt)
+        let stoppedAt = Date()
+        lastResultText = ""
         let language = store.language
         let mode = self.mode
         // Keeps the process alive while Parakeet runs after the mic stops in the background.
@@ -177,13 +186,23 @@ final class DictationController: ObservableObject {
                     store.add(note)
                     lastNote = note
                 case .actionButton, .keyboard:
+                    // Refused by iOS in the background; the intent also returns the text for Shortcuts.
                     UIPasteboard.general.string = cleaned
+                    lastResultText = cleaned
                     let source = mode == .keyboard ? "Clavier Tron" : "Bouton Action"
                     let item = HistoryItem(text: cleaned, duration: duration, source: source)
                     store.addHistory(item)
                     let forKeyboard = mode == .keyboard || store.actionButtonMode == .miniKeyboard
+                    keyboardInserted = false
                     publishResult(item, forKeyboard: forKeyboard)
-                    activity.finish(.done, message: forKeyboard ? "Texte prêt" : "Copié, prêt à coller", startedAt: startedAt)
+                    // Keep "Transcription" readable, and give the keyboard a moment to confirm.
+                    let shown = Date().timeIntervalSince(stoppedAt)
+                    if shown < 0.7 { try? await Task.sleep(for: .seconds(0.7 - shown)) }
+                    if forKeyboard {
+                        for _ in 0..<6 where !keyboardInserted { try? await Task.sleep(for: .milliseconds(100)) }
+                    }
+                    let copied = UIApplication.shared.applicationState == .active
+                    activity.finish(.done, message: keyboardInserted ? "Inséré" : (copied ? "Copié" : "Prêt"), startedAt: startedAt)
                     lastCopied = item
                 }
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
