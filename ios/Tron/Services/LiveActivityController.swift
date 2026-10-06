@@ -10,6 +10,12 @@ final class LiveActivityController {
     /// Returns false when iOS refused the Live Activity (needed to record in the background).
     @discardableResult
     func start(startedAt: Date) -> Bool {
+        // Mic armed for the keyboard: the session activity is reused (no new request from the background).
+        if let activity, activity.activityState == .active {
+            let state = DictationAttributes.ContentState(phase: .recording, startedAt: startedAt, levels: [])
+            Task { await activity.update(.init(state: state, staleDate: nil)) }
+            return true
+        }
         endAll()
         guard ActivityAuthorizationInfo().areActivitiesEnabled else {
             print("[Tron] Live Activities disabled")
@@ -47,16 +53,29 @@ final class LiveActivityController {
         Task { await activity.update(.init(state: state, staleDate: nil)) }
     }
 
-    func finish(_ phase: DictationAttributes.ContentState.Phase, message: String, startedAt: Date) {
+    /// Shows the result for a moment, then ends the activity, or goes back to "ready" when the mic stays armed.
+    func finish(_ phase: DictationAttributes.ContentState.Phase, message: String, startedAt: Date, keepAlive: Bool) {
         guard let activity else { return }
-        self.activity = nil
+        if !keepAlive { self.activity = nil }
         let state = DictationAttributes.ContentState(phase: phase, startedAt: startedAt, levels: [], message: message)
         // Ended activities leave the Dynamic Island at once, so the result stays visible a moment first.
         Task {
             await activity.update(.init(state: state, staleDate: nil))
             try? await Task.sleep(for: .seconds(2.5))
-            await activity.end(.init(state: state, staleDate: nil), dismissalPolicy: .immediate)
+            if keepAlive {
+                guard self.activity === activity, activity.content.state.phase == phase else { return }
+                let ready = DictationAttributes.ContentState(phase: .ready, startedAt: Date(), levels: [])
+                await activity.update(.init(state: ready, staleDate: nil))
+            } else {
+                await activity.end(.init(state: state, staleDate: nil), dismissalPolicy: .immediate)
+            }
         }
+    }
+
+    func ready() {
+        guard let activity else { return }
+        let state = DictationAttributes.ContentState(phase: .ready, startedAt: Date(), levels: [])
+        Task { await activity.update(.init(state: state, staleDate: nil)) }
     }
 
     func endAll() {

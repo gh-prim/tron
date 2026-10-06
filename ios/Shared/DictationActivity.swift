@@ -6,7 +6,8 @@ import Foundation
 struct DictationAttributes: ActivityAttributes {
     struct ContentState: Codable, Hashable {
         enum Phase: String, Codable, Hashable {
-            case recording, transcribing, done, failed
+            /// Mic armed between keyboard dictations.
+            case ready, recording, transcribing, done, failed
         }
 
         var phase: Phase

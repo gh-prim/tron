@@ -46,6 +46,12 @@ final class DictationController: ObservableObject {
     private var keyboardInserted = false
     /// Text of the last Action Button or keyboard dictation, returned by the intent.
     private(set) var lastResultText = ""
+    private var startObserver: DarwinObserver?
+    /// Mic kept on in the background after a keyboard dictation, so the next one starts without opening Tron.
+    @Published private(set) var armed = false
+    private var armedUntil = Date.distantPast
+    private var armTimer: Timer?
+    static let armDuration: TimeInterval = 5 * 60
 
     private init() {
         engine = TranscriptionEngine.shared
@@ -62,7 +68,20 @@ final class DictationController: ObservableObject {
         insertedObserver = DarwinObserver(TronShared.Signal.inserted) { [weak self] in
             Task { @MainActor in self?.keyboardInserted = true }
         }
-        StopDictationIntent.handler = { await DictationController.shared.stop()?.value }
+        startObserver = DarwinObserver(TronShared.Signal.start) { [weak self] in
+            Task { @MainActor in
+                guard let self, self.armed, self.phase == .idle else { return }
+                self.start(mode: .keyboard)
+            }
+        }
+        StopDictationIntent.handler = {
+            let dictation = DictationController.shared
+            if dictation.isRecording {
+                await dictation.stop()?.value
+            } else {
+                dictation.disarm()
+            }
+        }
         activity.endAll()
         publish(.idle)
     }
@@ -114,12 +133,51 @@ final class DictationController: ObservableObject {
     func cancel() {
         guard phase == .recording else { return }
         stopTimers()
-        recorder.stop()
         phase = .idle
         liveText = ""
         levels = []
+        if armed {
+            _ = recorder.pauseCapture()
+            activity.ready()
+        } else {
+            recorder.stop()
+            activity.endAll()
+        }
+        settle()
+    }
+
+    // MARK: Armed mic (Tron keyboard)
+
+    private func arm() {
+        armed = true
+        armedUntil = Date().addingTimeInterval(Self.armDuration)
+        guard armTimer == nil else { return }
+        armTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                guard let self else { return }
+                if self.phase == .idle, Date() > self.armedUntil {
+                    self.disarm()
+                } else if self.phase == .idle {
+                    self.publish(.ready)
+                }
+            }
+        }
+    }
+
+    /// Turns the mic off and ends the session.
+    func disarm() {
+        guard armed, phase == .idle else { return }
+        armTimer?.invalidate()
+        armTimer = nil
+        armed = false
+        recorder.stop()
         activity.endAll()
         publish(.idle)
+    }
+
+    /// Idle state for the keyboard: "ready" while the mic is armed.
+    private func settle() {
+        publish(armed ? .ready : .idle)
     }
 
     /// Returns the transcription task, so an intent can wait for it and write the clipboard while it runs.
@@ -127,7 +185,9 @@ final class DictationController: ObservableObject {
     func stop() -> Task<Void, Never>? {
         guard phase == .recording else { return nil }
         stopTimers()
-        let samples = recorder.stop()
+        if mode == .keyboard { arm() }
+        let samples = armed ? recorder.pauseCapture() : recorder.stop()
+        let keepAlive = armed
         let duration = Double(samples.count) / AudioRecorder.sampleRate
         let startedAt = self.startedAt
         phase = .finishing
@@ -136,8 +196,8 @@ final class DictationController: ObservableObject {
         guard duration >= 0.4 else {
             phase = .idle
             errorMessage = "Enregistrement trop court."
-            activity.finish(.failed, message: "Enregistrement trop court", startedAt: startedAt)
-            publish(.idle)
+            activity.finish(.failed, message: "Enregistrement trop court", startedAt: startedAt, keepAlive: keepAlive)
+            settle()
             return nil
         }
 
@@ -165,7 +225,7 @@ final class DictationController: ObservableObject {
                 let raw = try await engine.transcribe(samples, language: language)
                 print("[Tron] audio=\(String(format: "%.1f", duration))s wait=\(String(format: "%.2f", t1.timeIntervalSince(t0)))s asr=\(String(format: "%.2f", Date().timeIntervalSince(t1)))s bg=\(UIApplication.shared.applicationState != .active) text=\(raw.prefix(60))")
                 guard !raw.isEmpty else {
-                    finishFailed("Aucune parole détectée. L'audio n'a pas été gardé.", short: "Aucune parole détectée", startedAt: startedAt)
+                    finishFailed("Aucune parole détectée. L'audio n'a pas été gardé.", short: "Aucune parole détectée", startedAt: startedAt, keepAlive: keepAlive)
                     return
                 }
                 let cleaned = TextCleaner.clean(raw)
@@ -202,27 +262,27 @@ final class DictationController: ObservableObject {
                         for _ in 0..<6 where !keyboardInserted { try? await Task.sleep(for: .milliseconds(100)) }
                     }
                     let copied = UIApplication.shared.applicationState == .active
-                    activity.finish(.done, message: keyboardInserted ? "Inséré" : (copied ? "Copié" : "Prêt"), startedAt: startedAt)
+                    activity.finish(.done, message: keyboardInserted ? "Inséré" : (copied ? "Copié" : "Prêt"), startedAt: startedAt, keepAlive: keepAlive)
                     lastCopied = item
                 }
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
             } catch {
                 print("[Tron] transcription error: \(error)")
-                finishFailed("La transcription a échoué. \(error.localizedDescription)", short: "La transcription a échoué", startedAt: startedAt)
+                finishFailed("La transcription a échoué. \(error.localizedDescription)", short: "La transcription a échoué", startedAt: startedAt, keepAlive: keepAlive)
                 return
             }
             liveText = ""
             phase = .idle
-            publish(.idle)
+            settle()
         }
     }
 
-    private func finishFailed(_ message: String, short: String, startedAt: Date) {
+    private func finishFailed(_ message: String, short: String, startedAt: Date, keepAlive: Bool) {
         errorMessage = message
-        activity.finish(.failed, message: short, startedAt: startedAt)
+        activity.finish(.failed, message: short, startedAt: startedAt, keepAlive: keepAlive)
         liveText = ""
         phase = .idle
-        publish(.idle)
+        settle()
     }
 
     // MARK: App Group

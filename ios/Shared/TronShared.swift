@@ -10,7 +10,7 @@ enum TronShared {
     enum Key {
         static let actionButtonMode = "actionButtonMode"
         static let language = "language"
-        /// "idle", "recording" or "transcribing".
+        /// "idle", "ready", "recording" or "transcribing".
         static let state = "dictationState"
         /// Refreshed every second while recording, so a crashed session does not look alive.
         static let stateAt = "dictationStateAt"
@@ -26,6 +26,8 @@ enum TronShared {
     /// Darwin notification names (cross-process, no payload).
     enum Signal {
         static let stop = "app.tron.ios.stop"
+        /// Keyboard mic key while the mic is armed: start without opening the app.
+        static let start = "app.tron.ios.start"
         static let state = "app.tron.ios.state"
         static let result = "app.tron.ios.result"
         /// Posted by the keyboard once it typed the result.
@@ -33,14 +35,15 @@ enum TronShared {
     }
 
     enum State: String {
-        case idle, recording, transcribing
+        /// `ready`: the app keeps the mic armed in the background, the keyboard can start without opening it.
+        case idle, ready, recording, transcribing
     }
 
     static var state: State {
         let d = defaults
         guard let raw = d.string(forKey: Key.state), let s = State(rawValue: raw) else { return .idle }
         // A recording that stopped sending heartbeats is dead (app killed).
-        if s == .recording, Date().timeIntervalSince1970 - d.double(forKey: Key.stateAt) > 3 { return .idle }
+        if s == .recording || s == .ready, Date().timeIntervalSince1970 - d.double(forKey: Key.stateAt) > 3 { return .idle }
         if s == .transcribing, Date().timeIntervalSince1970 - d.double(forKey: Key.stateAt) > 60 { return .idle }
         return s
     }

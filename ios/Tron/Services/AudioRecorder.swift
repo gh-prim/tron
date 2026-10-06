@@ -15,6 +15,8 @@ final class AudioRecorder {
     private let targetFormat = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: 16_000, channels: 1, interleaved: false)!
 
     private(set) var isRunning = false
+    /// False while the mic stays on between keyboard dictations: audio is dropped, nothing is kept.
+    private var capturing = false
 
     static func requestPermission() async -> Bool {
         await AVAudioApplication.requestRecordPermission()
@@ -24,9 +26,10 @@ final class AudioRecorder {
         AVAudioApplication.shared.recordPermission == .granted
     }
 
+    /// Starts keeping audio. Reuses the running engine when the mic is armed.
     func start() throws {
+        lock.lock(); samples.removeAll(keepingCapacity: true); capturing = true; lock.unlock()
         guard !isRunning else { return }
-        lock.lock(); samples.removeAll(keepingCapacity: true); lock.unlock()
 
         let session = AVAudioSession.sharedInstance()
         do {
@@ -53,9 +56,16 @@ final class AudioRecorder {
         isRunning = true
     }
 
+    /// Stops keeping audio but leaves the mic on, so the next dictation can start from the background.
+    func pauseCapture() -> [Float] {
+        lock.lock(); capturing = false; lock.unlock()
+        return snapshot()
+    }
+
     /// Stops capture and returns everything recorded since `start()`.
     @discardableResult
     func stop() -> [Float] {
+        lock.lock(); capturing = false; lock.unlock()
         if isRunning {
             engine.inputNode.removeTap(onBus: 0)
             engine.stop()
@@ -96,7 +106,11 @@ final class AudioRecorder {
         let count = Int(out.frameLength)
         let chunk = Array(UnsafeBufferPointer(start: channel, count: count))
 
-        lock.lock(); samples.append(contentsOf: chunk); lock.unlock()
+        lock.lock()
+        let keep = capturing
+        if keep { samples.append(contentsOf: chunk) }
+        lock.unlock()
+        guard keep else { return }
 
         // RMS in dB, mapped to 0...1 for the waveform.
         var sum: Float = 0

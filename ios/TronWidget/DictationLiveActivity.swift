@@ -33,7 +33,7 @@ struct DictationLiveActivity: Widget {
                     HStack(spacing: Space.s3) {
                         StatusView(state: state, large: true)
                         Spacer(minLength: 0)
-                        if state.phase == .recording { StopButton() }
+                        if state.phase == .recording || state.phase == .ready { StopButton(endsSession: state.phase == .ready) }
                     }
                     .padding(.horizontal, Space.s1)
                 }
@@ -42,7 +42,7 @@ struct DictationLiveActivity: Widget {
                 case .recording:
                     // The waveform runs across the whole island: older half on the left, newest on the right.
                     Levels(levels: Array(padded(state.levels, 16).prefix(8)), count: 8, height: 18)
-                case .transcribing:
+                case .transcribing, .ready:
                     MiniMark(height: 14)
                 case .done:
                     Image(systemName: "checkmark.circle.fill").foregroundStyle(TronColor.brand)
@@ -55,6 +55,8 @@ struct DictationLiveActivity: Widget {
                     Levels(levels: Array(padded(state.levels, 16).suffix(8)), count: 8, height: 18)
                 case .transcribing:
                     ProgressView().progressViewStyle(.circular).tint(TronColor.live).scaleEffect(0.7)
+                case .ready:
+                    Image(systemName: "mic.fill").font(.system(size: 12)).foregroundStyle(TronColor.brand)
                 case .done:
                     Text(state.message ?? "Prêt").font(TronFont.label).foregroundStyle(TronColor.brand)
                 case .failed:
@@ -82,7 +84,9 @@ private struct LockScreenView: View {
                     .monospacedDigit()
                     .foregroundStyle(TronColor.live)
                     .frame(width: 44)
-                StopButton()
+                StopButton(endsSession: false)
+            } else if state.phase == .ready {
+                StopButton(endsSession: true)
             }
         }
         .padding(Space.s4)
@@ -102,6 +106,8 @@ private struct StatusView: View {
                     .font(TronFont.label)
                     .foregroundStyle(TronColor.ink)
             }
+        case .ready:
+            label("Micro prêt pour le clavier Tron", color: TronColor.muted)
         case .transcribing:
             label("Transcription…", color: TronColor.muted)
         case .done:
@@ -116,17 +122,20 @@ private struct StatusView: View {
     }
 }
 
+/// Stops the dictation, or turns the armed mic off when no dictation runs.
 private struct StopButton: View {
+    let endsSession: Bool
+
     var body: some View {
         Button(intent: StopDictationIntent()) {
-            Image(systemName: "stop.fill")
+            Image(systemName: endsSession ? "xmark" : "stop.fill")
                 .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(TronColor.onLive)
+                .foregroundStyle(endsSession ? TronColor.ink : TronColor.onLive)
                 .frame(width: 36, height: 36)
-                .background(Circle().fill(TronColor.live))
+                .background(Circle().fill(endsSession ? TronColor.line : TronColor.live))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Arrêter la dictée")
+        .accessibilityLabel(endsSession ? "Couper le micro" : "Arrêter la dictée")
     }
 }
 
