@@ -27,6 +27,11 @@ final class KeyboardViewController: UIInputViewController {
     private var heightConstraint: NSLayoutConstraint?
     private var observers: [DarwinObserver] = []
     private var statusClear: DispatchWorkItem?
+    /// Dictation currently shown at the cursor as provisional (marked) text.
+    private var markedSession: String?
+    private var markedPrefix = ""
+    /// Dictations whose live text was committed early (keyboard closed): no second insert.
+    private var abandonedSessions: Set<String> = []
 
     // MARK: Lifecycle
 
@@ -37,6 +42,7 @@ final class KeyboardViewController: UIInputViewController {
         observers = [
             DarwinObserver(TronShared.Signal.state) { [weak self] in self?.refreshTron() },
             DarwinObserver(TronShared.Signal.result) { [weak self] in self?.insertPendingResult(maxAge: 30) },
+            DarwinObserver(TronShared.Signal.partial) { [weak self] in self?.showPartial() },
         ]
     }
 
@@ -46,6 +52,20 @@ final class KeyboardViewController: UIInputViewController {
         // Only a result that just finished: an older one stays in the clipboard.
         insertPendingResult(maxAge: 5)
         updateAutoShift()
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        // Keyboard closed mid-dictation: keep what is written, skip the final insert.
+        commitMarked()
+    }
+
+    /// Makes the provisional text regular and stops live updates for that dictation (typing, keyboard closed).
+    private func commitMarked() {
+        guard let session = markedSession else { return }
+        textDocumentProxy.unmarkText()
+        abandonedSessions.insert(session)
+        markedSession = nil
     }
 
     override func viewWillLayoutSubviews() {
@@ -77,10 +97,46 @@ final class KeyboardViewController: UIInputViewController {
         }
     }
 
+    /// Live transcript at the cursor, as provisional text replaced in one block at each update.
+    private func showPartial() {
+        guard hasFullAccess else { return }
+        let d = TronShared.defaults
+        guard d.bool(forKey: TronShared.Key.partialForKeyboard),
+              let session = d.string(forKey: TronShared.Key.partialSession),
+              !abandonedSessions.contains(session)
+        else { return }
+        let text = d.string(forKey: TronShared.Key.partialText) ?? ""
+        if text.isEmpty {
+            // Cancelled or failed: drop the provisional text.
+            if markedSession == session {
+                textDocumentProxy.setMarkedText("", selectedRange: NSRange(location: 0, length: 0))
+                textDocumentProxy.unmarkText()
+                markedSession = nil
+            }
+            return
+        }
+        if markedSession != session {
+            if let last = textDocumentProxy.documentContextBeforeInput?.last, !last.isWhitespace {
+                markedPrefix = " "
+            } else {
+                markedPrefix = ""
+            }
+            markedSession = session
+        }
+        let shown = markedPrefix + text
+        textDocumentProxy.setMarkedText(shown, selectedRange: NSRange(location: (shown as NSString).length, length: 0))
+    }
+
     /// Types the last dictation at the cursor, once, if it is recent and meant for the keyboard.
     private func insertPendingResult(maxAge: TimeInterval) {
         guard hasFullAccess else { return }
         let d = TronShared.defaults
+        let session = d.string(forKey: TronShared.Key.resultSession) ?? ""
+        if abandonedSessions.contains(session) {
+            if let id = d.string(forKey: TronShared.Key.resultID) { d.set(id, forKey: TronShared.Key.insertedID) }
+            refreshTron()
+            return
+        }
         guard d.bool(forKey: TronShared.Key.resultForKeyboard),
               let id = d.string(forKey: TronShared.Key.resultID),
               id != d.string(forKey: TronShared.Key.insertedID),
@@ -88,11 +144,19 @@ final class KeyboardViewController: UIInputViewController {
               Date().timeIntervalSince1970 - d.double(forKey: TronShared.Key.resultAt) < maxAge
         else { refreshTron(); return }
         d.set(id, forKey: TronShared.Key.insertedID)
-        var insert = text
-        if let last = textDocumentProxy.documentContextBeforeInput?.last, !last.isWhitespace {
-            insert = " " + insert
+        if markedSession == session {
+            // The final clean text replaces the provisional one, then becomes regular text.
+            let shown = markedPrefix + text
+            textDocumentProxy.setMarkedText(shown, selectedRange: NSRange(location: (shown as NSString).length, length: 0))
+            textDocumentProxy.unmarkText()
+            markedSession = nil
+        } else {
+            var insert = text
+            if let last = textDocumentProxy.documentContextBeforeInput?.last, !last.isWhitespace {
+                insert = " " + insert
+            }
+            textDocumentProxy.insertText(insert)
         }
-        textDocumentProxy.insertText(insert)
         DarwinSignal.post(TronShared.Signal.inserted)
         refreshTron()
         showStatus("Texte inséré", color: Palette.brand, for: 2)
@@ -144,6 +208,7 @@ final class KeyboardViewController: UIInputViewController {
 
     private func type(_ text: String) {
         hideAccents()
+        commitMarked()
         let proxy = textDocumentProxy
         if text == " " {
             // Double space: ". " like the system keyboard.
@@ -212,6 +277,7 @@ final class KeyboardViewController: UIInputViewController {
 
     @objc private func deleteDown() {
         hideAccents()
+        commitMarked()
         textDocumentProxy.deleteBackward()
         deleteTimer?.invalidate()
         deleteTimer = Timer.scheduledTimer(withTimeInterval: 0.45, repeats: false) { [weak self] _ in

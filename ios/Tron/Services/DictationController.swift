@@ -47,6 +47,9 @@ final class DictationController: ObservableObject {
     /// Text of the last Action Button or keyboard dictation, returned by the intent.
     private(set) var lastResultText = ""
     private var startObserver: DarwinObserver?
+    /// Identifies the running dictation for the keyboard (live text and result).
+    private var sessionID = ""
+    private var liveForKeyboard = false
     /// Mic kept on in the background after a keyboard dictation, so the next one starts without opening Tron.
     @Published private(set) var armed = false
     private var armedUntil = Date.distantPast
@@ -119,6 +122,8 @@ final class DictationController: ObservableObject {
         liveText = ""
         elapsed = 0
         startedAt = now
+        sessionID = UUID().uuidString
+        liveForKeyboard = mode == .keyboard || (mode == .actionButton && store.actionButtonMode == .miniKeyboard)
         lastPreview = .distantPast
         phase = .recording
         publish(.recording)
@@ -133,6 +138,7 @@ final class DictationController: ObservableObject {
         guard phase == .recording else { return }
         stopTimers()
         phase = .idle
+        publishPartial("")
         liveText = ""
         levels = []
         if armed {
@@ -294,6 +300,7 @@ final class DictationController: ObservableObject {
 
     private func finishFailed(_ message: String, short: String, startedAt: Date, keepAlive: Bool) {
         errorMessage = message
+        publishPartial("")
         activity.finish(.failed, message: short, startedAt: startedAt, keepAlive: keepAlive)
         liveText = ""
         phase = .idle
@@ -315,7 +322,18 @@ final class DictationController: ObservableObject {
         d.set(item.text, forKey: TronShared.Key.resultText)
         d.set(Date().timeIntervalSince1970, forKey: TronShared.Key.resultAt)
         d.set(forKeyboard, forKey: TronShared.Key.resultForKeyboard)
+        d.set(sessionID, forKey: TronShared.Key.resultSession)
         DarwinSignal.post(TronShared.Signal.result)
+    }
+
+    /// Live transcript for the Tron keyboard, shown at the cursor as provisional text.
+    private func publishPartial(_ text: String) {
+        guard liveForKeyboard else { return }
+        let d = TronShared.defaults
+        d.set(sessionID, forKey: TronShared.Key.partialSession)
+        d.set(text, forKey: TronShared.Key.partialText)
+        d.set(true, forKey: TronShared.Key.partialForKeyboard)
+        DarwinSignal.post(TronShared.Signal.partial)
     }
 
     private func tick() {
@@ -327,21 +345,26 @@ final class DictationController: ObservableObject {
             lastHeartbeat = Date()
             publish(.recording)
         }
-        // No live preview in the background: it would only slow down the final pass.
-        guard UIApplication.shared.applicationState == .active, engine.isReady else { return }
-        // Refresh the live text about every 1.5 s, one pass at a time.
-        guard previewTask == nil, elapsed >= 1.2, Date().timeIntervalSince(lastPreview) >= 1.5 else { return }
+        // Notes only preview in the app; keyboard dictations stream to the cursor from the background too.
+        let live = mode != .note && liveForKeyboard
+        guard live || UIApplication.shared.applicationState == .active, engine.isReady else { return }
+        // Refresh the live text about every second (1.5 s for notes), one pass at a time.
+        let interval = live ? 1.0 : 1.5
+        guard previewTask == nil, elapsed >= 0.8, Date().timeIntervalSince(lastPreview) >= interval else { return }
         lastPreview = Date()
         let all = recorder.snapshot()
-        // Keep the preview fast on long notes: only the last 40 s are re-read live.
-        let maxSamples = Int(40 * AudioRecorder.sampleRate)
+        // Keep the preview fast on long dictations: past 2 min (40 s for notes) only the end is re-read.
+        let maxSamples = Int((live ? 120 : 40) * AudioRecorder.sampleRate)
         let window = all.count > maxSamples ? Array(all.suffix(maxSamples)) : all
         let trimmed = all.count > maxSamples
         let language = store.language
+        let session = sessionID
         previewTask = Task {
             let text = (try? await engine.transcribe(window, language: language)) ?? ""
-            if phase == .recording, !text.isEmpty {
+            if phase == .recording, sessionID == session, !text.isEmpty {
                 liveText = trimmed ? "… " + text : text
+                // The cursor text must stay whole: past the window it simply waits for the final pass.
+                if live, !trimmed { publishPartial(text) }
             }
             previewTask = nil
         }

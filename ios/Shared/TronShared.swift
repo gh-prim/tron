@@ -19,6 +19,13 @@ enum TronShared {
         static let resultAt = "resultAt"
         /// True when the result should be typed at the cursor by the Tron keyboard.
         static let resultForKeyboard = "resultForKeyboard"
+        /// Dictation the result or the live text belongs to.
+        static let resultSession = "resultSession"
+        static let partialSession = "partialSession"
+        /// Live transcript while recording; empty means "drop the provisional text".
+        static let partialText = "partialText"
+        /// True when the live transcript should show at the cursor.
+        static let partialForKeyboard = "partialForKeyboard"
         /// Last result the keyboard typed, so each result is inserted once.
         static let insertedID = "insertedID"
     }
@@ -30,6 +37,7 @@ enum TronShared {
         static let start = "app.tron.ios.start"
         static let state = "app.tron.ios.state"
         static let result = "app.tron.ios.result"
+        static let partial = "app.tron.ios.partial"
         /// Posted by the keyboard once it typed the result.
         static let inserted = "app.tron.ios.inserted"
     }
