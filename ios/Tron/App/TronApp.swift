@@ -6,6 +6,7 @@ struct TronApp: App {
     @StateObject private var engine = TranscriptionEngine.shared
     @StateObject private var dictation = DictationController.shared
     @StateObject private var pending = PendingLaunch.shared
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
         WindowGroup {
@@ -18,6 +19,10 @@ struct TronApp: App {
                 .onAppear {
                     // Start the model download early, during onboarding.
                     engine.prepare()
+                }
+                .onChange(of: scenePhase) { _, phase in
+                    // Each time Tron is opened, the mic is armed for the keyboard Tron key.
+                    if phase == .active, store.onboardingDone { dictation.armSession() }
                 }
                 .onOpenURL { url in
                     // tron://dictate, sent by the mic key of the Tron keyboard.

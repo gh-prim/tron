@@ -20,7 +20,9 @@ struct SettingsView: View {
                             SettingRow(title: "Langue", value: store.language.name)
                         }
                         RowDivider()
-                        SettingRow(title: "Clavier Tron", value: "Bientôt", chevron: false)
+                        NavigationLink { MicSessionSettingView() } label: {
+                            SettingRow(title: "Micro prêt", value: store.micSession.title)
+                        }
                         RowDivider()
                         NavigationLink { ActionButtonSettingView() } label: {
                             SettingRow(title: "Bouton Action", value: store.actionButtonMode.title)
@@ -222,6 +224,43 @@ private struct RetentionSettingView: View {
     }
 }
 
+private struct MicSessionSettingView: View {
+    @EnvironmentObject private var store: AppStore
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: Space.s3) {
+                Text("Après chaque utilisation de Tron, le micro reste prêt en arrière-plan. Le bouton Tron du clavier dicte alors sans ouvrir l'app. Le point orange d'iOS reste affiché pendant ce temps.")
+                    .font(TronFont.body)
+                    .foregroundStyle(TronColor.muted)
+                VStack(spacing: 0) {
+                    ForEach(Array(MicSession.allCases.enumerated()), id: \.element) { index, session in
+                        if index > 0 { RowDivider() }
+                        Button { store.micSession = session } label: {
+                            OptionRow(
+                                title: session.title,
+                                detail: nil,
+                                tag: session == .hour ? "Conseillé" : nil,
+                                selected: store.micSession == session
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .tronCard()
+                .clipShape(RoundedRectangle(cornerRadius: Radius.md))
+                Text("Pour couper le micro avant, touchez la croix dans la Dynamic Island.")
+                    .font(TronFont.caption)
+                    .foregroundStyle(TronColor.muted)
+            }
+            .padding(Space.s4)
+        }
+        .background(TronColor.paper.ignoresSafeArea())
+        .navigationTitle("Micro prêt")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
 private struct ActionButtonSettingView: View {
     @EnvironmentObject private var store: AppStore
 
@@ -248,9 +287,6 @@ private struct ActionButtonSettingView: View {
                 .tronCard()
                 .clipShape(RoundedRectangle(cornerRadius: Radius.md))
 
-                Text("Dans cette version de test, le texte est toujours copié : le clavier Tron mini arrive avec le clavier Tron.")
-                    .font(TronFont.caption)
-                    .foregroundStyle(TronColor.warning)
 
                 TronGroup(header: "Réglage de l'iPhone", footer: "Réglages, puis Bouton Action, puis Raccourci « Dicter avec Tron ».") {
                     Button {

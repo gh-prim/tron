@@ -24,6 +24,7 @@ final class AppStore: ObservableObject {
             TronShared.defaults.set(actionButtonModeRaw, forKey: TronShared.Key.actionButtonMode)
         }
     }
+    @Published var micSessionRaw: String { didSet { defaults.set(micSessionRaw, forKey: "micSession") } }
     @Published var historyRetentionRaw: String { didSet { defaults.set(historyRetentionRaw, forKey: "historyRetention") } }
     @Published var analyticsOptIn: Bool { didSet { defaults.set(analyticsOptIn, forKey: "analyticsOptIn") } }
 
@@ -38,6 +39,11 @@ final class AppStore: ObservableObject {
     var actionButtonMode: ActionButtonMode {
         get { ActionButtonMode(rawValue: actionButtonModeRaw) ?? .miniKeyboard }
         set { actionButtonModeRaw = newValue.rawValue }
+    }
+
+    var micSession: MicSession {
+        get { MicSession(rawValue: micSessionRaw) ?? .hour }
+        set { micSessionRaw = newValue.rawValue }
     }
 
     var historyRetention: HistoryRetention {
@@ -55,6 +61,7 @@ final class AppStore: ObservableObject {
         languageCode = d.string(forKey: "language") ?? SpokenLanguage.deviceDefault.rawValue
         micGranted = d.bool(forKey: "micGranted")
         actionButtonModeRaw = d.string(forKey: "actionButtonMode") ?? ActionButtonMode.miniKeyboard.rawValue
+        micSessionRaw = d.string(forKey: "micSession") ?? MicSession.hour.rawValue
         historyRetentionRaw = d.string(forKey: "historyRetention") ?? HistoryRetention.month.rawValue
         analyticsOptIn = d.bool(forKey: "analyticsOptIn")
         TronShared.defaults.set(languageCode, forKey: TronShared.Key.language)

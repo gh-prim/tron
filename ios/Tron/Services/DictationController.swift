@@ -51,7 +51,6 @@ final class DictationController: ObservableObject {
     @Published private(set) var armed = false
     private var armedUntil = Date.distantPast
     private var armTimer: Timer?
-    static let armDuration: TimeInterval = 5 * 60
 
     private init() {
         engine = TranscriptionEngine.shared
@@ -148,9 +147,25 @@ final class DictationController: ObservableObject {
 
     // MARK: Armed mic (Tron keyboard)
 
+    /// Turns the mic on (app in the foreground) so the keyboard can dictate without opening Tron.
+    func armSession() {
+        guard phase == .idle, AudioRecorder.permissionGranted else { return }
+        if armed { arm(); return }
+        do {
+            try recorder.arm()
+        } catch {
+            print("[Tron] arm failed: \(error)")
+            return
+        }
+        activity.startReady()
+        engine.prepare()
+        arm()
+        publish(.ready)
+    }
+
     private func arm() {
         armed = true
-        armedUntil = Date().addingTimeInterval(Self.armDuration)
+        armedUntil = Date().addingTimeInterval(store.micSession.interval)
         guard armTimer == nil else { return }
         armTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             Task { @MainActor in
@@ -185,7 +200,7 @@ final class DictationController: ObservableObject {
     func stop() -> Task<Void, Never>? {
         guard phase == .recording else { return nil }
         stopTimers()
-        if mode == .keyboard { arm() }
+        if mode != .note { arm() }
         let samples = armed ? recorder.pauseCapture() : recorder.stop()
         let keepAlive = armed
         let duration = Double(samples.count) / AudioRecorder.sampleRate

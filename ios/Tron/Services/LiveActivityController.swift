@@ -72,6 +72,15 @@ final class LiveActivityController {
         }
     }
 
+    /// Session activity while the mic is armed, started from the foreground.
+    func startReady() {
+        guard activity?.activityState != .active else { ready(); return }
+        endAll()
+        guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
+        let state = DictationAttributes.ContentState(phase: .ready, startedAt: Date(), levels: [])
+        activity = try? Activity.request(attributes: DictationAttributes(), content: .init(state: state, staleDate: nil), pushType: nil)
+    }
+
     func ready() {
         guard let activity else { return }
         let state = DictationAttributes.ContentState(phase: .ready, startedAt: Date(), levels: [])

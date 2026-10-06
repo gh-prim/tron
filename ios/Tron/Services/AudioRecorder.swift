@@ -56,6 +56,14 @@ final class AudioRecorder {
         isRunning = true
     }
 
+    /// Turns the mic on without keeping audio, ready for `start()` from the background.
+    func arm() throws {
+        lock.lock(); capturing = false; lock.unlock()
+        guard !isRunning else { return }
+        try start()
+        lock.lock(); capturing = false; samples.removeAll(); lock.unlock()
+    }
+
     /// Stops keeping audio but leaves the mic on, so the next dictation can start from the background.
     func pauseCapture() -> [Float] {
         lock.lock(); capturing = false; lock.unlock()

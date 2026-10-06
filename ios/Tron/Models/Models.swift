@@ -66,6 +66,30 @@ enum ActionButtonMode: String, CaseIterable, Identifiable, Codable {
     }
 }
 
+/// How long the mic stays armed in the background after Tron was used, so the keyboard Tron key starts
+/// dictating without opening the app.
+enum MicSession: String, CaseIterable, Identifiable, Codable {
+    case quarter, hour, fourHours
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .quarter: return "15 minutes"
+        case .hour: return "1 heure"
+        case .fourHours: return "4 heures"
+        }
+    }
+
+    var interval: TimeInterval {
+        switch self {
+        case .quarter: return 15 * 60
+        case .hour: return 60 * 60
+        case .fourHours: return 4 * 60 * 60
+        }
+    }
+}
+
 enum HistoryRetention: String, CaseIterable, Identifiable, Codable {
     case day, week, month, forever
 
