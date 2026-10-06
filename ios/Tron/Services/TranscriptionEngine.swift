@@ -80,6 +80,34 @@ final class TranscriptionEngine: ObservableObject {
         return result.text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    struct Word {
+        var text: String
+        var start: TimeInterval
+        var end: TimeInterval
+    }
+
+    /// Same pass, as words with their timing in the clip (for the live preview's stable prefix).
+    func transcribeWords(_ samples: [Float], language: SpokenLanguage) async throws -> [Word] {
+        guard let manager else { throw EngineError.notReady }
+        var audio = samples
+        if audio.count < 16_000 { audio += [Float](repeating: 0, count: 16_000 - audio.count) }
+        var state = TdtDecoderState.make(decoderLayers: await manager.decoderLayerCount)
+        let result = try await manager.transcribe(audio, decoderState: &state, language: Language(rawValue: language.rawValue))
+        var words: [Word] = []
+        for timing in result.tokenTimings ?? [] {
+            let piece = timing.token.replacingOccurrences(of: "\u{2581}", with: " ")
+            let text = piece.trimmingCharacters(in: .whitespaces)
+            if piece.hasPrefix(" ") || words.isEmpty {
+                guard !text.isEmpty else { continue }
+                words.append(Word(text: text, start: timing.startTime, end: timing.endTime))
+            } else {
+                words[words.count - 1].text += text
+                words[words.count - 1].end = timing.endTime
+            }
+        }
+        return words
+    }
+
     enum EngineError: LocalizedError {
         case notReady
         case failed(String)

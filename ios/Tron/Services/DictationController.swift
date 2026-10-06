@@ -50,6 +50,9 @@ final class DictationController: ObservableObject {
     /// Identifies the running dictation for the keyboard (live text and result).
     private var sessionID = ""
     private var liveForKeyboard = false
+    /// Live preview: text already settled, and how many samples it covers. Only the tail after it is re-read.
+    private var frozenText = ""
+    private var frozenSamples = 0
     /// Mic kept on in the background after a keyboard dictation, so the next one starts without opening Tron.
     @Published private(set) var armed = false
     private var armedUntil = Date.distantPast
@@ -123,6 +126,8 @@ final class DictationController: ObservableObject {
         elapsed = 0
         startedAt = now
         sessionID = UUID().uuidString
+        frozenText = ""
+        frozenSamples = 0
         liveForKeyboard = mode == .keyboard || (mode == .actionButton && store.actionButtonMode == .miniKeyboard)
         lastPreview = .distantPast
         phase = .recording
@@ -348,25 +353,41 @@ final class DictationController: ObservableObject {
         // Notes only preview in the app; keyboard dictations stream to the cursor from the background too.
         let live = mode != .note && liveForKeyboard
         guard live || UIApplication.shared.applicationState == .active, engine.isReady else { return }
-        // Refresh the live text about every second (1.5 s for notes), one pass at a time.
-        let interval = live ? 1.0 : 1.5
-        guard previewTask == nil, elapsed >= 0.8, Date().timeIntervalSince(lastPreview) >= interval else { return }
+        // Refresh about every 300 ms, one pass at a time (a busy tick is simply skipped).
+        guard previewTask == nil, elapsed >= 0.5, Date().timeIntervalSince(lastPreview) >= 0.3 else { return }
         lastPreview = Date()
         let all = recorder.snapshot()
-        // Keep the preview fast on long dictations: past 2 min (40 s for notes) only the end is re-read.
-        let maxSamples = Int((live ? 120 : 40) * AudioRecorder.sampleRate)
-        let window = all.count > maxSamples ? Array(all.suffix(maxSamples)) : all
-        let trimmed = all.count > maxSamples
+        let rate = AudioRecorder.sampleRate
+        // Only the tail after the settled text is re-read, with 1 s of context before it.
+        let start = max(0, frozenSamples - Int(rate))
+        guard all.count > start else { return }
+        let window = Array(all[start...])
+        let context = Double(frozenSamples - start) / rate
+        let length = Double(window.count) / rate
         let language = store.language
         let session = sessionID
+        let t0 = Date()
         previewTask = Task {
-            let text = Corrections.apply((try? await engine.transcribe(window, language: language)) ?? "")
-            if phase == .recording, sessionID == session, !text.isEmpty {
-                liveText = trimmed ? "… " + text : text
-                // The cursor text must stay whole: past the window it simply waits for the final pass.
-                if live, !trimmed { publishPartial(text) }
+            defer { previewTask = nil }
+            guard let words = try? await engine.transcribeWords(window, language: language),
+                  phase == .recording, sessionID == session else { return }
+            // Words that start in the context are already part of the settled text.
+            var tail = words.filter { $0.start >= context - 0.05 }
+            // Past 12 s of tail, settle everything up to 5 s before the end (cut between two words).
+            if length - context > 12, let cut = tail.lastIndex(where: { $0.end <= length - 5 }), cut + 1 < tail.count {
+                let settled = tail[...cut].map(\.text).joined(separator: " ")
+                frozenText = frozenText.isEmpty ? settled : frozenText + " " + settled
+                frozenSamples = start + Int(tail[cut + 1].start * rate)
+                tail = Array(tail[(cut + 1)...])
             }
-            previewTask = nil
+            let tailText = tail.map(\.text).joined(separator: " ")
+            let text = Corrections.apply([frozenText, tailText].filter { !$0.isEmpty }.joined(separator: " "))
+            if ProcessInfo.processInfo.environment["TRON_LOG_PREVIEW"] != nil || Int.random(in: 0..<20) == 0 {
+                print("[Tron] preview tail=\(String(format: "%.1f", length))s asr=\(String(format: "%.2f", Date().timeIntervalSince(t0)))s thermal=\(ProcessInfo.processInfo.thermalState.rawValue)")
+            }
+            guard !text.isEmpty else { return }
+            liveText = text
+            if live { publishPartial(text) }
         }
     }
 
