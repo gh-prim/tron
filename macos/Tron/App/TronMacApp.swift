@@ -44,7 +44,12 @@ struct TronMacApp: App {
                 openWindow(id: "main")
                 NSApp.activate(ignoringOtherApps: true)
             }
-            SettingsLink { Text("Réglages et dictionnaire…") }
+            Button("Dictionnaire…") {
+                WindowRouter.shared.tab = .dictionary
+                openWindow(id: "main")
+                NSApp.activate(ignoringOtherApps: true)
+            }
+            SettingsLink { Text("Réglages…") }
             Button("Autorisations…") { delegate.showOnboarding() }
             Divider()
             Button("Quitter Tron") { NSApp.terminate(nil) }

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Réglages (⌘ ,): language and the correction dictionary.
+/// Réglages (⌘ ,). The dictionary has its own tab in the main window.
 struct SettingsView: View {
     @EnvironmentObject private var store: AppStore
 
@@ -17,9 +17,6 @@ struct SettingsView: View {
             .padding(Space.s6)
             .frame(width: 520)
             .tabItem { Label("Général", systemImage: "gearshape") }
-
-            DictionaryView()
-                .tabItem { Label("Dictionnaire", systemImage: "character.book.closed") }
         }
     }
 }

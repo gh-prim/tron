@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Réglages > Dictionnaire: corrections applied to every dictation and note (shared format with iOS).
+/// Dictionnaire tab of the main window: corrections applied to every dictation and note (shared format with iOS).
 struct DictionaryView: View {
     @State private var entries: [Correction] = []
     @State private var heard = ""
@@ -60,8 +60,6 @@ struct DictionaryView: View {
                 .listStyle(.inset(alternatesRowBackgrounds: true))
             }
         }
-        .padding(Space.s6)
-        .frame(minWidth: 520, minHeight: 380)
         .sheet(item: $editing) { entry in
             CorrectionEditor(entry: entry) { reload() }
         }
