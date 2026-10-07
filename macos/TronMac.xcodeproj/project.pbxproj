@@ -7,40 +7,58 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1688D41A00B68486B342F956 /* MacStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09F6B110E1444BD993C9B8F9 /* MacStore.swift */; };
+		06B167AFFE79EDAC8C441745 /* NoteDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4772BDE15693031F5E266F7F /* NoteDetailView.swift */; };
+		0BFF1BF24D6F4CEA128C9DCD /* AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F9034C15A224CB5963E8183 /* AppStore.swift */; };
 		182E46D9062C18FC19BA9DB3 /* IslandController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CD03C06981F16B3E2297D0A /* IslandController.swift */; };
 		33342FEE012A23F059642353 /* IslandView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 462EEE3AA5ED7CBD551F4E9A /* IslandView.swift */; };
+		3ECF7DF35BB67BCE837B2642 /* Rows.swift in Sources */ = {isa = PBXBuildFile; fileRef = 816D49969CC9E1F0E62FDF4F /* Rows.swift */; };
+		5410221465044CD854115D83 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4A18008A19388E471DFB1BFB /* Assets.xcassets */; };
+		5732045DFB85FAB57BE5A3CD /* LiveText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F0F31EA132F498594EB866 /* LiveText.swift */; };
 		60FC3432523A50D4C14F8CBB /* Paster.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C26AE018907A0101D2ED49 /* Paster.swift */; };
 		65A2C47A516FDE58AEEAE191 /* AudioRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF0153E1B0B3C8F02FB71B2 /* AudioRecorder.swift */; };
 		6A400B21706C59789875E0FD /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = C43176DEAF63A16D404C1FAC /* Models.swift */; };
 		71E4CCB6D832B5652838C0CC /* TextCleaner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B3396AE028E7B3B04AAF8AC /* TextCleaner.swift */; };
 		75A417047E6816E8FBFA686C /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F79310B559810562B819D68 /* OnboardingView.swift */; };
+		77B70D3CA2F518CA6F17BAD5 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9B56325F1EA781CE1688D7A /* Components.swift */; };
 		79833E5EDF92E3CADA6B0A81 /* TronMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BED6183DAD2D12210232230B /* TronMacApp.swift */; };
 		AA2531C9DC640212A9697F77 /* FnKeyMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5D6B9B525E15D711ABCBA0E /* FnKeyMonitor.swift */; };
 		B7A790A181EAD8E9F6D5EE37 /* Corrections.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB618A910B9B9F5C96D76375 /* Corrections.swift */; };
+		D384CE3FEA25D997DFC7C8BF /* RecordButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C9CCEB2E50CEC988050D300 /* RecordButton.swift */; };
 		D3F9D2E63198B323AD058900 /* MacDictation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D5953D47236681983F45DA3 /* MacDictation.swift */; };
+		D757A39EC7B713FE3D432EBD /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44EE01C2ABE89551901F5595 /* MainView.swift */; };
+		DA37BC1E0FAD73BD2C0837E1 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0A49C893C33DACB94E0B521 /* Theme.swift */; };
 		E6CF61FDEDE9A65514EB8F6D /* TranscriptionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C7BCC823091DC21FE047E0C /* TranscriptionEngine.swift */; };
+		EAD44B410156F8D1D7647BAE /* TronShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136AC38E0B5A302911B90918 /* TronShared.swift */; };
 		FBEDD78D78BB48C000F4895F /* Permissions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9E5EE0D5A1A33D0A626A0A3 /* Permissions.swift */; };
 		FC1D5FE0C4739D06DB4BE989 /* FluidAudio in Frameworks */ = {isa = PBXBuildFile; productRef = CFE3895F2E124A45B5110AE8 /* FluidAudio */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		09F6B110E1444BD993C9B8F9 /* MacStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacStore.swift; sourceTree = "<group>"; };
+		136AC38E0B5A302911B90918 /* TronShared.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TronShared.swift; sourceTree = "<group>"; };
 		1D5953D47236681983F45DA3 /* MacDictation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacDictation.swift; sourceTree = "<group>"; };
+		33F0F31EA132F498594EB866 /* LiveText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LiveText.swift; path = ../ios/Shared/LiveText.swift; sourceTree = "<group>"; };
+		44EE01C2ABE89551901F5595 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 		462EEE3AA5ED7CBD551F4E9A /* IslandView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandView.swift; sourceTree = "<group>"; };
+		4772BDE15693031F5E266F7F /* NoteDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteDetailView.swift; sourceTree = "<group>"; };
+		4A18008A19388E471DFB1BFB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		4CD03C06981F16B3E2297D0A /* IslandController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandController.swift; sourceTree = "<group>"; };
 		4F79310B559810562B819D68 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		5C7BCC823091DC21FE047E0C /* TranscriptionEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TranscriptionEngine.swift; path = ../ios/Tron/Services/TranscriptionEngine.swift; sourceTree = "<group>"; };
+		5F9034C15A224CB5963E8183 /* AppStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppStore.swift; path = ../ios/Tron/Models/AppStore.swift; sourceTree = "<group>"; };
 		77BD119704338E14BBBBDD9D /* Tron.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Tron.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		816D49969CC9E1F0E62FDF4F /* Rows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Rows.swift; path = ../ios/Tron/Home/Rows.swift; sourceTree = "<group>"; };
 		9B3396AE028E7B3B04AAF8AC /* TextCleaner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TextCleaner.swift; path = ../ios/Tron/Services/TextCleaner.swift; sourceTree = "<group>"; };
+		9C9CCEB2E50CEC988050D300 /* RecordButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordButton.swift; sourceTree = "<group>"; };
 		A3F3348363E287ADBBEF63BD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A3F76019C49EE490C85F4607 /* Tron.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Tron.entitlements; sourceTree = "<group>"; };
 		A5D6B9B525E15D711ABCBA0E /* FnKeyMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FnKeyMonitor.swift; sourceTree = "<group>"; };
 		A9C26AE018907A0101D2ED49 /* Paster.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Paster.swift; sourceTree = "<group>"; };
+		B9B56325F1EA781CE1688D7A /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Components.swift; path = ../ios/Tron/Theme/Components.swift; sourceTree = "<group>"; };
 		BED6183DAD2D12210232230B /* TronMacApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TronMacApp.swift; sourceTree = "<group>"; };
 		C43176DEAF63A16D404C1FAC /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Models.swift; path = ../ios/Tron/Models/Models.swift; sourceTree = "<group>"; };
 		C9E5EE0D5A1A33D0A626A0A3 /* Permissions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Permissions.swift; sourceTree = "<group>"; };
 		CB618A910B9B9F5C96D76375 /* Corrections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Corrections.swift; path = ../ios/Shared/Corrections.swift; sourceTree = "<group>"; };
+		E0A49C893C33DACB94E0B521 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Theme.swift; path = ../ios/Shared/Theme.swift; sourceTree = "<group>"; };
 		FBF0153E1B0B3C8F02FB71B2 /* AudioRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AudioRecorder.swift; path = ../ios/Tron/Services/AudioRecorder.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -59,9 +77,11 @@
 		24C71EF432763A40F6E7AA0B /* Tron */ = {
 			isa = PBXGroup;
 			children = (
+				4A18008A19388E471DFB1BFB /* Assets.xcassets */,
 				A3F3348363E287ADBBEF63BD /* Info.plist */,
 				A3F76019C49EE490C85F4607 /* Tron.entitlements */,
 				D40890BB578F9B1954FF8107 /* App */,
+				3E7B9FDB49A669DC54F8B722 /* Home */,
 				B918E988F9D9F7B7F7D0CA79 /* Island */,
 				9176A82FC6BFE306DE3612D9 /* Onboarding */,
 				87A1ECDF184A5B8CEE19B627 /* Services */,
@@ -72,13 +92,28 @@
 		3484AB1E8CCA0F1C6426E7FD /* Core */ = {
 			isa = PBXGroup;
 			children = (
+				5F9034C15A224CB5963E8183 /* AppStore.swift */,
 				FBF0153E1B0B3C8F02FB71B2 /* AudioRecorder.swift */,
+				B9B56325F1EA781CE1688D7A /* Components.swift */,
 				CB618A910B9B9F5C96D76375 /* Corrections.swift */,
+				33F0F31EA132F498594EB866 /* LiveText.swift */,
 				C43176DEAF63A16D404C1FAC /* Models.swift */,
+				816D49969CC9E1F0E62FDF4F /* Rows.swift */,
 				9B3396AE028E7B3B04AAF8AC /* TextCleaner.swift */,
+				E0A49C893C33DACB94E0B521 /* Theme.swift */,
 				5C7BCC823091DC21FE047E0C /* TranscriptionEngine.swift */,
 			);
 			name = Core;
+			sourceTree = "<group>";
+		};
+		3E7B9FDB49A669DC54F8B722 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				44EE01C2ABE89551901F5595 /* MainView.swift */,
+				4772BDE15693031F5E266F7F /* NoteDetailView.swift */,
+				9C9CCEB2E50CEC988050D300 /* RecordButton.swift */,
+			);
+			path = Home;
 			sourceTree = "<group>";
 		};
 		5F372C6529A0E366674578D6 = {
@@ -129,8 +164,8 @@
 		D40890BB578F9B1954FF8107 /* App */ = {
 			isa = PBXGroup;
 			children = (
-				09F6B110E1444BD993C9B8F9 /* MacStore.swift */,
 				BED6183DAD2D12210232230B /* TronMacApp.swift */,
+				136AC38E0B5A302911B90918 /* TronShared.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -143,6 +178,7 @@
 			buildConfigurationList = 582383594008BEA4C2441958 /* Build configuration list for PBXNativeTarget "Tron" */;
 			buildPhases = (
 				860D7F395FAD895373BA1751 /* Sources */,
+				ADF67152536B79994500A2A7 /* Resources */,
 				78FC0FABF47E23796FB21051 /* Frameworks */,
 			);
 			buildRules = (
@@ -194,25 +230,44 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		ADF67152536B79994500A2A7 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5410221465044CD854115D83 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		860D7F395FAD895373BA1751 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0BFF1BF24D6F4CEA128C9DCD /* AppStore.swift in Sources */,
 				65A2C47A516FDE58AEEAE191 /* AudioRecorder.swift in Sources */,
+				77B70D3CA2F518CA6F17BAD5 /* Components.swift in Sources */,
 				B7A790A181EAD8E9F6D5EE37 /* Corrections.swift in Sources */,
 				AA2531C9DC640212A9697F77 /* FnKeyMonitor.swift in Sources */,
 				182E46D9062C18FC19BA9DB3 /* IslandController.swift in Sources */,
 				33342FEE012A23F059642353 /* IslandView.swift in Sources */,
+				5732045DFB85FAB57BE5A3CD /* LiveText.swift in Sources */,
 				D3F9D2E63198B323AD058900 /* MacDictation.swift in Sources */,
-				1688D41A00B68486B342F956 /* MacStore.swift in Sources */,
+				D757A39EC7B713FE3D432EBD /* MainView.swift in Sources */,
 				6A400B21706C59789875E0FD /* Models.swift in Sources */,
+				06B167AFFE79EDAC8C441745 /* NoteDetailView.swift in Sources */,
 				75A417047E6816E8FBFA686C /* OnboardingView.swift in Sources */,
 				60FC3432523A50D4C14F8CBB /* Paster.swift in Sources */,
 				FBEDD78D78BB48C000F4895F /* Permissions.swift in Sources */,
+				D384CE3FEA25D997DFC7C8BF /* RecordButton.swift in Sources */,
+				3ECF7DF35BB67BCE837B2642 /* Rows.swift in Sources */,
 				71E4CCB6D832B5652838C0CC /* TextCleaner.swift in Sources */,
+				DA37BC1E0FAD73BD2C0837E1 /* Theme.swift in Sources */,
 				E6CF61FDEDE9A65514EB8F6D /* TranscriptionEngine.swift in Sources */,
 				79833E5EDF92E3CADA6B0A81 /* TronMacApp.swift in Sources */,
+				EAD44B410156F8D1D7647BAE /* TronShared.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

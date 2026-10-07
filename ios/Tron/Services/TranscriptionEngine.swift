@@ -80,11 +80,7 @@ final class TranscriptionEngine: ObservableObject {
         return result.text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    struct Word {
-        var text: String
-        var start: TimeInterval
-        var end: TimeInterval
-    }
+    typealias Word = LiveText.Word
 
     /// Same pass, as words with their timing in the clip (for the live preview's stable prefix).
     func transcribeWords(_ samples: [Float], language: SpokenLanguage) async throws -> [Word] {

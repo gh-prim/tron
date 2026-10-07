@@ -25,6 +25,16 @@ targets:
         group: Core
       - path: ../ios/Shared/Corrections.swift
         group: Core
+      - path: ../ios/Shared/LiveText.swift
+        group: Core
+      - path: ../ios/Shared/Theme.swift
+        group: Core
+      - path: ../ios/Tron/Models/AppStore.swift
+        group: Core
+      - path: ../ios/Tron/Theme/Components.swift
+        group: Core
+      - path: ../ios/Tron/Home/Rows.swift
+        group: Core
     dependencies:
       - package: FluidAudio
     info:
@@ -33,7 +43,6 @@ targets:
         CFBundleDisplayName: Tron
         CFBundleShortVersionString: "0.1"
         CFBundleVersion: "1"
-        LSUIElement: true
         LSApplicationCategoryType: public.app-category.productivity
         NSMicrophoneUsageDescription: Tron écoute votre voix pour la transcrire sur ce Mac. L'audio ne quitte pas le Mac.
         NSHumanReadableCopyright: ""
@@ -53,3 +62,4 @@ targets:
         ENABLE_HARDENED_RUNTIME: YES
         SWIFT_VERSION: "5.0"
         GENERATE_INFOPLIST_FILE: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon

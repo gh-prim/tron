@@ -4,10 +4,20 @@ import SwiftUI
 @main
 struct TronMacApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
-    @ObservedObject private var store = MacStore.shared
+    @ObservedObject private var store = AppStore.shared
     @ObservedObject private var engine = TranscriptionEngine.shared
+    @Environment(\.openWindow) private var openWindow
 
     var body: some Scene {
+        Window("Tron", id: "main") {
+            MainView()
+                .environmentObject(AppStore.shared)
+                .environmentObject(TranscriptionEngine.shared)
+                .environmentObject(MacDictation.shared)
+        }
+        .defaultSize(width: 960, height: 640)
+        .windowToolbarStyle(.unifiedCompact)
+
         MenuBarExtra("Tron", systemImage: "waveform") {
             Text(status)
             Divider()
@@ -24,6 +34,10 @@ struct TronMacApp: App {
                         NSPasteboard.general.setString(item.text, forType: .string)
                     }
                 }
+            }
+            Button("Ouvrir Tron") {
+                openWindow(id: "main")
+                NSApp.activate(ignoringOtherApps: true)
             }
             Button("Autorisations…") { delegate.showOnboarding() }
             Divider()
@@ -59,7 +73,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         monitor.onEscape = { [weak self] in MainActor.assumeIsolated { self?.gesture.escape() ?? false } }
         startMonitor()
 
-        if !MacStore.shared.onboarded || !Permissions.microphone || !Permissions.accessibility {
+        if !AppStore.shared.onboardingDone || !Permissions.microphone || !Permissions.accessibility {
             showOnboarding()
         }
     }
@@ -92,7 +106,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             window.title = "Tron"
             window.isReleasedWhenClosed = false
             window.contentViewController = NSHostingController(rootView: OnboardingView { [weak self] in
-                MacStore.shared.onboarded = true
+                AppStore.shared.onboardingDone = true
                 self?.onboarding?.close()
             })
             window.center()

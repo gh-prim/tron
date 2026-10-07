@@ -1,8 +1,13 @@
 import SwiftUI
+#if canImport(UIKit)
 import UIKit
+#else
+import AppKit
+#endif
 
 // Tron design system tokens (tokens.json v4). Every color follows the system light or dark setting.
 
+#if canImport(UIKit)
 extension UIColor {
     convenience init(hex: UInt32, alpha: CGFloat = 1) {
         self.init(
@@ -21,6 +26,26 @@ extension Color {
         })
     }
 }
+#else
+extension NSColor {
+    convenience init(hex: UInt32, alpha: CGFloat = 1) {
+        self.init(
+            srgbRed: CGFloat((hex >> 16) & 0xFF) / 255,
+            green: CGFloat((hex >> 8) & 0xFF) / 255,
+            blue: CGFloat(hex & 0xFF) / 255,
+            alpha: alpha
+        )
+    }
+}
+
+extension Color {
+    init(light: UInt32, dark: UInt32) {
+        self.init(nsColor: NSColor(name: nil) { appearance in
+            NSColor(hex: appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua ? dark : light)
+        })
+    }
+}
+#endif
 
 enum TronColor {
     static let paper = Color(light: 0xF6F4EF, dark: 0x121311)

@@ -4,6 +4,8 @@ Dictée dans n'importe quelle app du Mac, sur l'appareil. Pas de compte ni de Su
 
 ## Utilisation
 
+- Fenêtre principale, comme sur iPhone : statistiques de la semaine, gros bouton micro pour une note vocale (un clic démarre et arrête, maintenir enregistre), waveform et texte en direct, onglets Notes et Historique. Note : titre modifiable, texte nettoyé ou original, audio réécoutable, copier, partager, supprimer.
+
 - Maintenir **fn / 🌐** : Tron écoute. Relâcher : le texte est collé au curseur.
 - **Double appui** sur fn : le micro reste ouvert. Un appui pour finir, Échap pour annuler.
 - Pendant la dictée, une île sort de l'encoche (ou en haut au centre sans encoche) avec seulement la waveform, puis la transcription.
