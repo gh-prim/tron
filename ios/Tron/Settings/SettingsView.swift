@@ -125,8 +125,7 @@ struct SettingsView: View {
     private var engineLabel: String {
         switch engine.state {
         case .ready: return "prêt"
-        case .downloading(let p): return "\(Int(p * 100)) %"
-        case .loading: return "chargement"
+        case .downloading, .loading: return "\(Int(engine.progress * 100)) %"
         case .failed: return "erreur"
         case .idle: return "en attente"
         }

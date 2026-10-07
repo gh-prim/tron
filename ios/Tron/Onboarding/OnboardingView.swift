@@ -559,29 +559,29 @@ struct ModelStatusView: View {
         switch engine.state {
         case .idle, .ready:
             EmptyView()
-        case .downloading(let p):
-            VStack(alignment: .leading, spacing: 6) {
+        case .downloading, .loading:
+            let downloading: Bool = { if case .downloading = engine.state { return true } else { return false } }()
+            VStack(alignment: .leading, spacing: Space.s2) {
                 HStack {
-                    Text("Téléchargement du modèle")
+                    Text(downloading ? "Téléchargement du modèle" : "Préparation du modèle sur l'iPhone")
                     Spacer()
-                    Text("\(Int(p * 100)) %").font(TronFont.meta)
+                    Text("\(Int(engine.progress * 100)) %").font(TronFont.meta).monospacedDigit()
                 }
                 .font(TronFont.label)
                 .foregroundStyle(TronColor.ink)
-                ProgressView(value: p).tint(TronColor.brand)
-                Text("Une seule fois, quelques centaines de Mo. Restez en Wi-Fi.")
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(TronColor.line)
+                        Capsule().fill(TronColor.brand).frame(width: geo.size.width * engine.progress)
+                    }
+                }
+                .frame(height: 6)
+                .accessibilityElement()
+                .accessibilityLabel(downloading ? "Téléchargement du modèle" : "Préparation du modèle")
+                .accessibilityValue("\(Int(engine.progress * 100)) %")
+                Text(downloading ? "Une seule fois, quelques centaines de Mo. Restez en Wi-Fi." : "Quelques secondes, à chaque ouverture de Tron.")
                     .font(TronFont.caption)
                     .foregroundStyle(TronColor.muted)
-            }
-            .padding(Space.s4)
-            .tronCard()
-        case .loading:
-            HStack(spacing: Space.s2) {
-                ProgressView()
-                Text("Préparation du modèle sur l'iPhone")
-                    .font(TronFont.label)
-                    .foregroundStyle(TronColor.ink)
-                Spacer()
             }
             .padding(Space.s4)
             .tronCard()
