@@ -7,6 +7,8 @@ final class AudioRecorder {
 
     /// Called on the main queue with a 0...1 level, about 20 times a second.
     var onLevel: ((Float) -> Void)?
+    /// Called on the audio thread with each 16 kHz chunk kept (for a frequency view).
+    var onChunk: (([Float]) -> Void)?
 
     private let engine = AVAudioEngine()
     private let lock = NSLock()
@@ -123,6 +125,7 @@ final class AudioRecorder {
         if keep { samples.append(contentsOf: chunk) }
         lock.unlock()
         guard keep else { return }
+        onChunk?(chunk)
 
         // RMS in dB, mapped to 0...1 for the waveform.
         var sum: Float = 0

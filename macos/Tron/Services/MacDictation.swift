@@ -29,6 +29,7 @@ final class MacDictation: ObservableObject {
 
     let island = IslandController()
     private let recorder = AudioRecorder()
+    private let spectrum = Spectrum()
     private let engine = TranscriptionEngine.shared
     private let store = AppStore.shared
     private var showIsland: DispatchWorkItem?
@@ -46,7 +47,12 @@ final class MacDictation: ObservableObject {
             guard let self, self.phase == .recording else { return }
             self.levels.append(level)
             if self.levels.count > 120 { self.levels.removeFirst(self.levels.count - 120) }
-            if self.mode == .dictation { self.island.model.levels = self.levels }
+        }
+        let spectrum = self.spectrum
+        recorder.onChunk = { chunk in spectrum.feed(chunk) }
+        spectrum.onBands = { [weak self] bands in
+            guard let self, self.phase == .recording, self.mode == .dictation else { return }
+            self.island.model.bands = bands
         }
     }
 
@@ -78,7 +84,8 @@ final class MacDictation: ObservableObject {
             MainActor.assumeIsolated { self?.tick() }
         }
         guard mode == .dictation else { return }
-        island.model.levels = []
+        spectrum.reset()
+        island.model.bands = []
         island.model.locked = false
         // A quick tap (first half of a double press) should not flash the island.
         let work = DispatchWorkItem { [weak self] in

@@ -16,7 +16,8 @@ final class IslandController {
 
     final class Model: ObservableObject {
         @Published var stage: Stage = .hidden
-        @Published var levels: [Float] = []
+        /// Voice frequency bands while listening (see Spectrum).
+        @Published var bands: [Float] = []
         @Published var locked = false
         /// Size of the notch on this screen; zero when there is none.
         @Published var notch: CGSize = .zero

@@ -12,6 +12,7 @@
 		182E46D9062C18FC19BA9DB3 /* IslandController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CD03C06981F16B3E2297D0A /* IslandController.swift */; };
 		33342FEE012A23F059642353 /* IslandView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 462EEE3AA5ED7CBD551F4E9A /* IslandView.swift */; };
 		3ECF7DF35BB67BCE837B2642 /* Rows.swift in Sources */ = {isa = PBXBuildFile; fileRef = 816D49969CC9E1F0E62FDF4F /* Rows.swift */; };
+		4E4D94C52B052C4E145B3657 /* Spectrum.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3041011FED523B183164598D /* Spectrum.swift */; };
 		5410221465044CD854115D83 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4A18008A19388E471DFB1BFB /* Assets.xcassets */; };
 		5732045DFB85FAB57BE5A3CD /* LiveText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F0F31EA132F498594EB866 /* LiveText.swift */; };
 		60FC3432523A50D4C14F8CBB /* Paster.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C26AE018907A0101D2ED49 /* Paster.swift */; };
@@ -36,6 +37,7 @@
 /* Begin PBXFileReference section */
 		136AC38E0B5A302911B90918 /* TronShared.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TronShared.swift; sourceTree = "<group>"; };
 		1D5953D47236681983F45DA3 /* MacDictation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacDictation.swift; sourceTree = "<group>"; };
+		3041011FED523B183164598D /* Spectrum.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spectrum.swift; sourceTree = "<group>"; };
 		33F0F31EA132F498594EB866 /* LiveText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LiveText.swift; path = ../ios/Shared/LiveText.swift; sourceTree = "<group>"; };
 		44EE01C2ABE89551901F5595 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 		462EEE3AA5ED7CBD551F4E9A /* IslandView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandView.swift; sourceTree = "<group>"; };
@@ -157,6 +159,7 @@
 			children = (
 				4CD03C06981F16B3E2297D0A /* IslandController.swift */,
 				462EEE3AA5ED7CBD551F4E9A /* IslandView.swift */,
+				3041011FED523B183164598D /* Spectrum.swift */,
 			);
 			path = Island;
 			sourceTree = "<group>";
@@ -263,6 +266,7 @@
 				FBEDD78D78BB48C000F4895F /* Permissions.swift in Sources */,
 				D384CE3FEA25D997DFC7C8BF /* RecordButton.swift in Sources */,
 				3ECF7DF35BB67BCE837B2642 /* Rows.swift in Sources */,
+				4E4D94C52B052C4E145B3657 /* Spectrum.swift in Sources */,
 				71E4CCB6D832B5652838C0CC /* TextCleaner.swift in Sources */,
 				DA37BC1E0FAD73BD2C0837E1 /* Theme.swift in Sources */,
 				E6CF61FDEDE9A65514EB8F6D /* TranscriptionEngine.swift in Sources */,

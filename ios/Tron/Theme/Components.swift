@@ -1,5 +1,7 @@
 import SwiftUI
+#if canImport(UIKit)
 import UIKit
+#endif
 
 struct PrimaryButtonStyle: ButtonStyle {
     var fill: Color = TronColor.brand
@@ -156,6 +158,9 @@ struct RowDivider: View {
     var body: some View { Rectangle().fill(TronColor.line).frame(height: 1) }
 }
 
+#if canImport(UIKit)
+// iOS navigation chrome (the Mac app has its own window layout).
+
 /// A pushed screen as designed: "‹ Back" text link in brand, then a large title, then the content.
 struct TronScreen<Content: View>: View {
     let back: String
@@ -237,3 +242,4 @@ extension UINavigationController: @retroactive UIGestureRecognizerDelegate {
         viewControllers.count > 1
     }
 }
+#endif

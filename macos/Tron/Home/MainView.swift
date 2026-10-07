@@ -187,16 +187,15 @@ struct MainView: View {
             EmptyStateView(
                 icon: "clock.arrow.circlepath",
                 title: "Rien dans l'historique",
-                message: "Ce que vous dictez avec fn dans les autres apps apparaît ici. Cliquez pour recopier un texte."
+                message: "Ce que vous dictez avec fn dans les autres apps apparaît ici. Le bouton copier le recopie."
             )
         }
         ForEach(store.history) { item in
-            Button {
+            HistoryRow(item: item) {
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString(item.text, forType: .string)
                 show("Copié.")
-            } label: { HistoryRow(item: item) }
-                .buttonStyle(.plain)
+            }
         }
     }
 

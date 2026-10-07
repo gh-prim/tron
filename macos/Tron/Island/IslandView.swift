@@ -41,7 +41,7 @@ struct IslandView: View {
             EmptyView()
         case .listening:
             HStack(spacing: 8) {
-                Waveform(levels: model.levels)
+                Waveform(bands: model.bands)
                 if model.locked {
                     Image(systemName: "lock.fill")
                         .font(.system(size: 9, weight: .semibold))
@@ -75,28 +75,21 @@ struct IslandView: View {
     }
 }
 
-/// Bars that follow the voice, newest on the right.
+/// One bar per frequency band of the voice, low pitches on the left. Same width as before (24 bars).
 private struct Waveform: View {
-    var levels: [Float]
-    private let count = 24
+    var bands: [Float]
+    private let count = Spectrum.bandCount
 
     var body: some View {
         HStack(alignment: .center, spacing: 2.5) {
             ForEach(0..<count, id: \.self) { i in
-                let level = value(at: i)
                 Capsule()
                     .fill(.white)
-                    .frame(width: 3, height: 3 + CGFloat(level) * 16)
+                    .frame(width: 3, height: 3 + CGFloat(i < bands.count ? bands[i] : 0) * 16)
             }
         }
         .frame(height: 20)
-        .animation(.easeOut(duration: 0.08), value: levels)
-    }
-
-    private func value(at i: Int) -> Float {
-        let index = levels.count - count + i
-        guard index >= 0, index < levels.count else { return 0 }
-        return levels[index]
+        .animation(.easeOut(duration: 0.08), value: bands)
     }
 }
 
