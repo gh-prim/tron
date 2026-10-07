@@ -11,7 +11,8 @@ struct IslandView: View {
     private var size: CGSize {
         switch model.stage {
         case .hidden: return CGSize(width: baseWidth, height: hasNotch ? model.notch.height : 0)
-        case .listening, .transcribing: return CGSize(width: baseWidth + 40, height: topBand + 34)
+        case .listening: return CGSize(width: baseWidth + 40, height: topBand + 48)
+        case .transcribing: return CGSize(width: baseWidth + 40, height: topBand + 34)
         case .pasted: return CGSize(width: baseWidth + 20, height: topBand + 30)
         case .copied, .error: return CGSize(width: max(baseWidth + 60, 240), height: topBand + 34)
         }
@@ -85,11 +86,17 @@ private struct Waveform: View {
             ForEach(0..<count, id: \.self) { i in
                 Capsule()
                     .fill(.white)
-                    .frame(width: 3, height: 3 + CGFloat(i < bands.count ? bands[i] : 0) * 16)
+                    .frame(width: 3, height: 3 + height(i) * 33)
             }
         }
-        .frame(height: 20)
+        .frame(height: 36)
         .animation(.easeOut(duration: 0.08), value: bands)
+    }
+
+    /// Gain on the band level, so normal speech fills most of the height.
+    private func height(_ i: Int) -> CGFloat {
+        guard i < bands.count else { return 0 }
+        return min(1, CGFloat(bands[i]) * 1.8)
     }
 }
 
