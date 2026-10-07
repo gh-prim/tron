@@ -1,0 +1,55 @@
+name: TronMac
+options:
+  bundleIdPrefix: app.tron
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+packages:
+  FluidAudio:
+    url: https://github.com/FluidInference/FluidAudio
+    exactVersion: 0.17.5
+targets:
+  Tron:
+    type: application
+    platform: macOS
+    sources:
+      - path: Tron
+      # Core shared with the iOS app.
+      - path: ../ios/Tron/Services/TranscriptionEngine.swift
+        group: Core
+      - path: ../ios/Tron/Services/AudioRecorder.swift
+        group: Core
+      - path: ../ios/Tron/Services/TextCleaner.swift
+        group: Core
+      - path: ../ios/Tron/Models/Models.swift
+        group: Core
+      - path: ../ios/Shared/Corrections.swift
+        group: Core
+    dependencies:
+      - package: FluidAudio
+    info:
+      path: Tron/Info.plist
+      properties:
+        CFBundleDisplayName: Tron
+        CFBundleShortVersionString: "0.1"
+        CFBundleVersion: "1"
+        LSUIElement: true
+        LSApplicationCategoryType: public.app-category.productivity
+        NSMicrophoneUsageDescription: Tron écoute votre voix pour la transcrire sur ce Mac. L'audio ne quitte pas le Mac.
+        NSHumanReadableCopyright: ""
+    entitlements:
+      path: Tron/Tron.entitlements
+      properties:
+        com.apple.security.device.audio-input: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.tron.mac
+        PRODUCT_NAME: Tron
+        MARKETING_VERSION: "0.1"
+        CURRENT_PROJECT_VERSION: "1"
+        DEVELOPMENT_TEAM: 52S288U9A6
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: Apple Development
+        ENABLE_HARDENED_RUNTIME: YES
+        SWIFT_VERSION: "5.0"
+        GENERATE_INFOPLIST_FILE: NO

@@ -31,6 +31,7 @@ final class AudioRecorder {
         lock.lock(); samples.removeAll(keepingCapacity: true); capturing = true; lock.unlock()
         guard !isRunning else { return }
 
+        #if os(iOS)
         let session = AVAudioSession.sharedInstance()
         do {
             try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetoothHFP])
@@ -41,6 +42,7 @@ final class AudioRecorder {
             try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetoothHFP, .mixWithOthers])
             try session.setActive(true)
         }
+        #endif
 
         let input = engine.inputNode
         let inputFormat = input.outputFormat(forBus: 0)
@@ -78,7 +80,9 @@ final class AudioRecorder {
             engine.inputNode.removeTap(onBus: 0)
             engine.stop()
             isRunning = false
+            #if os(iOS)
             try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+            #endif
         }
         return snapshot()
     }
