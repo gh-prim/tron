@@ -1,0 +1,437 @@
+import Foundation
+import UIKit
+
+/// Drives one recording: mic capture, live preview text, final transcription and saving.
+@MainActor
+final class DictationController: ObservableObject {
+    static let shared = DictationController()
+
+    enum Mode {
+        /// Big button in the app: creates a note.
+        case note
+        /// Action Button shortcut, in the background: text goes to the Tron keyboard or the clipboard.
+        case actionButton
+        /// Mic key of the Tron keyboard (opens the app): text goes back to the keyboard.
+        case keyboard
+    }
+
+    enum Phase: Equatable {
+        case idle
+        case recording
+        case finishing
+    }
+
+    @Published private(set) var phase: Phase = .idle
+    @Published private(set) var mode: Mode = .note
+    @Published private(set) var levels: [Float] = []
+    @Published private(set) var liveText = ""
+    @Published private(set) var elapsed: TimeInterval = 0
+    @Published var errorMessage: String?
+    /// Set when a note was just created, so the UI can open it.
+    @Published var lastNote: Note?
+    /// Set when an Action Button or keyboard dictation was copied.
+    @Published var lastCopied: HistoryItem?
+
+    private let recorder = AudioRecorder()
+    private let engine: TranscriptionEngine
+    private let activity = LiveActivityController()
+    private let store: AppStore
+    private var ticker: Timer?
+    private var previewTask: Task<Void, Never>?
+    private var startedAt = Date()
+    private var lastPreview = Date.distantPast
+    private var lastHeartbeat = Date.distantPast
+    private var stopObserver: DarwinObserver?
+    private var insertedObserver: DarwinObserver?
+    private var keyboardInserted = false
+    /// Text of the last Action Button or keyboard dictation, returned by the intent.
+    private(set) var lastResultText = ""
+    private var startObserver: DarwinObserver?
+    /// Identifies the running dictation for the keyboard (live text and result).
+    private var sessionID = ""
+    private var liveForKeyboard = false
+    /// Live preview: text already settled, and how many samples it covers. Only the tail after it is re-read.
+    private var frozenText = ""
+    private var frozenSamples = 0
+    /// Words of the previous pass, and the words already shown. Shown text only grows:
+    /// a word appears once two passes in a row agree on it, so the cursor never steps back.
+    private var previousWords: [String] = []
+    private var shownWords: [String] = []
+    /// Mic kept on in the background after a keyboard dictation, so the next one starts without opening Tron.
+    @Published private(set) var armed = false
+    private var armedUntil = Date.distantPast
+    private var armTimer: Timer?
+
+    private init() {
+        engine = TranscriptionEngine.shared
+        store = AppStore.shared
+        recorder.onLevel = { [weak self] level in
+            guard let self else { return }
+            self.levels.append(level)
+            if self.levels.count > 120 { self.levels.removeFirst(self.levels.count - 120) }
+        }
+        // Stop button of the Live Activity.
+        stopObserver = DarwinObserver(TronShared.Signal.stop) { [weak self] in
+            Task { @MainActor in self?.stop() }
+        }
+        insertedObserver = DarwinObserver(TronShared.Signal.inserted) { [weak self] in
+            Task { @MainActor in self?.keyboardInserted = true }
+        }
+        startObserver = DarwinObserver(TronShared.Signal.start) { [weak self] in
+            Task { @MainActor in
+                guard let self, self.armed, self.phase == .idle else { return }
+                self.start(mode: .keyboard)
+            }
+        }
+        StopDictationIntent.handler = {
+            let dictation = DictationController.shared
+            if dictation.isRecording {
+                await dictation.stop()?.value
+            } else {
+                dictation.disarm()
+            }
+        }
+        activity.endAll()
+        publish(.idle)
+    }
+
+    var isRecording: Bool { phase == .recording }
+
+    func start(mode: Mode) {
+        guard phase == .idle else { return }
+        guard AudioRecorder.permissionGranted else {
+            errorMessage = "Tron n'a pas accès au micro. Autorisez-le dans Réglages, puis Tron."
+            return
+        }
+        if case .failed = engine.state {
+            engine.retry()
+        } else {
+            // Loads the model from cache when the app was launched in the background.
+            engine.prepare()
+        }
+        let now = Date()
+        // In the background, iOS only lets the mic start once the Live Activity is up.
+        if mode != .note, !activity.start(startedAt: now), UIApplication.shared.applicationState != .active {
+            errorMessage = "Activez les Activités en direct pour Tron dans Réglages, puis Tron."
+            return
+        }
+        do {
+            try recorder.start()
+        } catch {
+            print("[Tron] mic start failed: \(error)")
+            if mode != .note { activity.endAll() }
+            errorMessage = "Le micro n'a pas pu démarrer. \(error.localizedDescription)"
+            return
+        }
+        print("[Tron] start mode=\(mode) state=\(UIApplication.shared.applicationState.rawValue) engine=\(engine.state)")
+        self.mode = mode
+        levels = []
+        liveText = ""
+        elapsed = 0
+        startedAt = now
+        sessionID = UUID().uuidString
+        frozenText = ""
+        frozenSamples = 0
+        previousWords = []
+        shownWords = []
+        liveForKeyboard = mode == .keyboard || (mode == .actionButton && store.actionButtonMode == .miniKeyboard)
+        lastPreview = .distantPast
+        phase = .recording
+        publish(.recording)
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+
+        ticker = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.tick() }
+        }
+    }
+
+    func cancel() {
+        guard phase == .recording else { return }
+        stopTimers()
+        phase = .idle
+        publishPartial("")
+        liveText = ""
+        levels = []
+        if armed {
+            _ = recorder.pauseCapture()
+            activity.ready()
+        } else {
+            recorder.stop()
+            activity.endAll()
+        }
+        settle()
+    }
+
+    // MARK: Armed mic (Tron keyboard)
+
+    /// Turns the mic on (app in the foreground) so the keyboard can dictate without opening Tron.
+    func armSession() {
+        guard phase == .idle, AudioRecorder.permissionGranted else { return }
+        if armed { arm(); return }
+        do {
+            try recorder.arm()
+        } catch {
+            print("[Tron] arm failed: \(error)")
+            return
+        }
+        activity.startReady()
+        engine.prepare()
+        arm()
+        publish(.ready)
+    }
+
+    private func arm() {
+        armed = true
+        armedUntil = Date().addingTimeInterval(store.micSession.interval)
+        guard armTimer == nil else { return }
+        armTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                guard let self else { return }
+                if self.phase == .idle, Date() > self.armedUntil {
+                    self.disarm()
+                } else if self.phase == .idle {
+                    self.publish(.ready)
+                }
+            }
+        }
+    }
+
+    /// Turns the mic off and ends the session.
+    func disarm() {
+        guard armed, phase == .idle else { return }
+        armTimer?.invalidate()
+        armTimer = nil
+        armed = false
+        recorder.stop()
+        activity.endAll()
+        publish(.idle)
+    }
+
+    /// Idle state for the keyboard: "ready" while the mic is armed.
+    private func settle() {
+        publish(armed ? .ready : .idle)
+    }
+
+    /// Returns the transcription task, so an intent can wait for it and write the clipboard while it runs.
+    @discardableResult
+    func stop() -> Task<Void, Never>? {
+        guard phase == .recording else { return nil }
+        stopTimers()
+        if mode != .note { arm() }
+        let samples = armed ? recorder.pauseCapture() : recorder.stop()
+        let keepAlive = armed
+        let duration = Double(samples.count) / AudioRecorder.sampleRate
+        let startedAt = self.startedAt
+        phase = .finishing
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+
+        guard duration >= 0.4 else {
+            phase = .idle
+            errorMessage = "Enregistrement trop court."
+            activity.finish(.failed, message: "Enregistrement trop court", startedAt: startedAt, keepAlive: keepAlive)
+            settle()
+            return nil
+        }
+
+        publish(.transcribing)
+        activity.transcribing(startedAt: startedAt)
+        let stoppedAt = Date()
+        lastResultText = ""
+        let language = store.language
+        let mode = self.mode
+        // Keeps the process alive while Parakeet runs after the mic stops in the background.
+        var backgroundTask = UIBackgroundTaskIdentifier.invalid
+        backgroundTask = UIApplication.shared.beginBackgroundTask(withName: "Transcription") {
+            UIApplication.shared.endBackgroundTask(backgroundTask)
+            backgroundTask = .invalid
+        }
+        return Task {
+            defer {
+                if backgroundTask != .invalid { UIApplication.shared.endBackgroundTask(backgroundTask) }
+            }
+            await previewTask?.value
+            do {
+                let t0 = Date()
+                try await engine.waitUntilReady()
+                let t1 = Date()
+                let raw = Corrections.apply(try await engine.transcribe(samples, language: language))
+                print("[Tron] audio=\(String(format: "%.1f", duration))s wait=\(String(format: "%.2f", t1.timeIntervalSince(t0)))s asr=\(String(format: "%.2f", Date().timeIntervalSince(t1)))s bg=\(UIApplication.shared.applicationState != .active) text=\(raw.prefix(60))")
+                guard !raw.isEmpty else {
+                    finishFailed("Aucune parole détectée. L'audio n'a pas été gardé.", short: "Aucune parole détectée", startedAt: startedAt, keepAlive: keepAlive)
+                    return
+                }
+                let cleaned = TextCleaner.clean(raw)
+                switch mode {
+                case .note:
+                    let id = UUID()
+                    let fileName = "\(id.uuidString).wav"
+                    try? AudioRecorder.writeWAV(samples, to: AppStore.audioURL(for: fileName))
+                    let note = Note(
+                        id: id,
+                        title: TextCleaner.title(for: cleaned),
+                        text: cleaned,
+                        rawText: raw,
+                        duration: duration,
+                        audioFileName: fileName,
+                        language: language.rawValue
+                    )
+                    store.add(note)
+                    lastNote = note
+                case .actionButton, .keyboard:
+                    // Refused by iOS in the background; the intent also returns the text for Shortcuts.
+                    UIPasteboard.general.string = cleaned
+                    lastResultText = cleaned
+                    let source = mode == .keyboard ? "Clavier Tron" : "Bouton Action"
+                    let item = HistoryItem(text: cleaned, duration: duration, source: source)
+                    store.addHistory(item)
+                    let forKeyboard = mode == .keyboard || store.actionButtonMode == .miniKeyboard
+                    keyboardInserted = false
+                    publishResult(item, forKeyboard: forKeyboard)
+                    // Keep "Transcription" readable, and give the keyboard a moment to confirm.
+                    let shown = Date().timeIntervalSince(stoppedAt)
+                    if shown < 0.7 { try? await Task.sleep(for: .seconds(0.7 - shown)) }
+                    if forKeyboard {
+                        for _ in 0..<6 where !keyboardInserted { try? await Task.sleep(for: .milliseconds(100)) }
+                    }
+                    let copied = UIApplication.shared.applicationState == .active
+                    activity.finish(.done, message: keyboardInserted ? "Inséré" : (copied ? "Copié" : "Prêt"), startedAt: startedAt, keepAlive: keepAlive)
+                    lastCopied = item
+                }
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+            } catch {
+                print("[Tron] transcription error: \(error)")
+                finishFailed("La transcription a échoué. \(error.localizedDescription)", short: "La transcription a échoué", startedAt: startedAt, keepAlive: keepAlive)
+                return
+            }
+            liveText = ""
+            phase = .idle
+            settle()
+        }
+    }
+
+    private func finishFailed(_ message: String, short: String, startedAt: Date, keepAlive: Bool) {
+        errorMessage = message
+        publishPartial("")
+        activity.finish(.failed, message: short, startedAt: startedAt, keepAlive: keepAlive)
+        liveText = ""
+        phase = .idle
+        settle()
+    }
+
+    // MARK: App Group
+
+    private func publish(_ state: TronShared.State) {
+        let d = TronShared.defaults
+        d.set(state.rawValue, forKey: TronShared.Key.state)
+        d.set(Date().timeIntervalSince1970, forKey: TronShared.Key.stateAt)
+        DarwinSignal.post(TronShared.Signal.state)
+    }
+
+    private func publishResult(_ item: HistoryItem, forKeyboard: Bool) {
+        let d = TronShared.defaults
+        d.set(item.id.uuidString, forKey: TronShared.Key.resultID)
+        d.set(item.text, forKey: TronShared.Key.resultText)
+        d.set(Date().timeIntervalSince1970, forKey: TronShared.Key.resultAt)
+        d.set(forKeyboard, forKey: TronShared.Key.resultForKeyboard)
+        d.set(sessionID, forKey: TronShared.Key.resultSession)
+        DarwinSignal.post(TronShared.Signal.result)
+    }
+
+    /// Live transcript for the Tron keyboard, shown at the cursor as provisional text.
+    private func publishPartial(_ text: String) {
+        guard liveForKeyboard else { return }
+        let d = TronShared.defaults
+        d.set(sessionID, forKey: TronShared.Key.partialSession)
+        d.set(text, forKey: TronShared.Key.partialText)
+        d.set(true, forKey: TronShared.Key.partialForKeyboard)
+        DarwinSignal.post(TronShared.Signal.partial)
+    }
+
+    private func tick() {
+        guard phase == .recording else { return }
+        elapsed = Date().timeIntervalSince(startedAt)
+        if mode != .note { activity.update(levels: levels, startedAt: startedAt) }
+        // Heartbeat for the keyboard, about once a second.
+        if Date().timeIntervalSince(lastHeartbeat) >= 1 {
+            lastHeartbeat = Date()
+            publish(.recording)
+        }
+        // Notes only preview in the app; keyboard dictations stream to the cursor from the background too.
+        let live = mode != .note && liveForKeyboard
+        guard live || UIApplication.shared.applicationState == .active, engine.isReady else { return }
+        // Refresh about every 200 ms, one pass at a time (a busy tick is simply skipped).
+        guard previewTask == nil, elapsed >= 0.4, Date().timeIntervalSince(lastPreview) >= 0.2 else { return }
+        lastPreview = Date()
+        let all = recorder.snapshot()
+        let rate = AudioRecorder.sampleRate
+        // Only the tail after the settled text is re-read, with 1 s of context before it.
+        let start = max(0, frozenSamples - Int(rate))
+        guard all.count > start else { return }
+        let window = Array(all[start...])
+        let context = Double(frozenSamples - start) / rate
+        let length = Double(window.count) / rate
+        let language = store.language
+        let session = sessionID
+        let t0 = Date()
+        previewTask = Task {
+            defer { previewTask = nil }
+            guard let words = try? await engine.transcribeWords(window, language: language),
+                  phase == .recording, sessionID == session else { return }
+            // Words that start in the context are already part of the settled text.
+            var tail = words.filter { $0.start >= context - 0.05 }
+            // Past 8 s of tail, settle everything up to 3 s before the end (cut between two words).
+            if length - context > 8, let cut = tail.lastIndex(where: { $0.end <= length - 3 }), cut + 1 < tail.count {
+                let settled = tail[...cut].map(\.text).joined(separator: " ")
+                frozenText = frozenText.isEmpty ? settled : frozenText + " " + settled
+                frozenSamples = start + Int(tail[cut + 1].start * rate)
+                tail = Array(tail[(cut + 1)...])
+            }
+            let current = frozenText.split(separator: " ").map(String.init) + tail.map(\.text)
+            // A word shows once two passes in a row agree on it (ignoring case and punctuation).
+            let add = Self.agreedWords(current: current, previous: previousWords, shown: shownWords)
+            previousWords = current
+            guard !add.isEmpty else { return }
+            shownWords += add
+            let text = Corrections.apply(shownWords.joined(separator: " "))
+            if ProcessInfo.processInfo.environment["TRON_LOG_PREVIEW"] != nil || Int.random(in: 0..<20) == 0 {
+                print("[Tron] preview tail=\(String(format: "%.1f", length))s asr=\(String(format: "%.2f", Date().timeIntervalSince(t0)))s thermal=\(ProcessInfo.processInfo.thermalState.rawValue)")
+            }
+            guard !text.isEmpty else { return }
+            liveText = text
+            if live { publishPartial(text) }
+        }
+    }
+
+    private static func norm(_ word: String) -> String {
+        word.lowercased().trimmingCharacters(in: .punctuationCharacters)
+    }
+
+    /// Words to append to the live text. Measured on a Mac bench (French speech replayed in real time,
+    /// 200 ms passes): words show 0.35 s after they are said, with no wrong word and nothing taken back.
+    static func agreedWords(current: [String], previous: [String], shown: [String]) -> [String] {
+        var agreed = 0
+        while agreed < min(current.count, previous.count), norm(current[agreed]) == norm(previous[agreed]) { agreed += 1 }
+        // Where the shown text ends inside this pass: aligned on the last shown word, near the expected index,
+        // since settling the start of the sentence can merge or split a word.
+        var from = shown.count
+        if let last = shown.last {
+            for p in [shown.count, shown.count - 1, shown.count + 1, shown.count - 2, shown.count + 2]
+            where p >= 1 && p <= current.count && norm(current[p - 1]) == norm(last) {
+                from = p
+                break
+            }
+        }
+        guard agreed > from else { return [] }
+        var add = Array(current[from..<agreed])
+        // Parakeet ends every clip with a period: the newest word keeps no punctuation.
+        if agreed == current.count, let last = add.last {
+            add[add.count - 1] = last.trimmingCharacters(in: CharacterSet(charactersIn: ".,;:!?…"))
+        }
+        return add
+    }
+
+    private func stopTimers() {
+        ticker?.invalidate()
+        ticker = nil
+    }
+}
