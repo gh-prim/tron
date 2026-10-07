@@ -3,13 +3,13 @@ import SwiftUI
 
 /// Main window: the big mic for voice notes on the left, notes and history on the right.
 struct MainView: View {
-    enum Tab: String, CaseIterable { case notes = "Notes", history = "Historique" }
+    enum Tab: String, CaseIterable { case notes = "Notes", history = "Historique", dictionary = "Dictionnaire" }
 
     @EnvironmentObject private var store: AppStore
     @EnvironmentObject private var engine: TranscriptionEngine
     @EnvironmentObject private var dictation: MacDictation
 
-    @State private var tab: Tab = .notes
+    @ObservedObject private var router = WindowRouter.shared
     @State private var holding = false
     @State private var willCancel = false
     @State private var path: [UUID] = []
@@ -37,7 +37,7 @@ struct MainView: View {
         .onChange(of: dictation.lastNote) { _, note in
             guard let note else { return }
             justCreatedID = note.id
-            tab = .notes
+            router.tab = .notes
             path = [note.id]
             dictation.lastNote = nil
         }
@@ -58,6 +58,14 @@ struct MainView: View {
                     .font(.system(size: 22, weight: .semibold, design: .rounded))
                     .foregroundStyle(TronColor.ink)
                 Spacer()
+                if !noteBusy {
+                    SettingsLink {
+                        Image(systemName: "gearshape").font(.system(size: 15))
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(TronColor.muted)
+                    .help("Réglages")
+                }
                 if noteBusy, dictation.phase == .recording {
                     HStack(spacing: Space.s2) {
                         Circle().fill(TronColor.live).frame(width: 8, height: 8)
@@ -144,21 +152,23 @@ struct MainView: View {
 
     private var rightColumn: some View {
         VStack(spacing: Space.s4) {
-            Picker("Vue", selection: $tab) {
+            Picker("Vue", selection: $router.tab) {
                 ForEach(Tab.allCases, id: \.self) { Text($0.rawValue).tag($0) }
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .frame(maxWidth: 320)
+            .frame(maxWidth: 420)
 
-            ScrollView {
-                LazyVStack(spacing: Space.s2) {
-                    switch tab {
-                    case .notes: notesList
-                    case .history: historyList
+            if router.tab == .dictionary {
+                DictionaryView()
+                    .padding(.bottom, Space.s6)
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: Space.s2) {
+                        if router.tab == .notes { notesList } else { historyList }
                     }
+                    .padding(.bottom, Space.s6)
                 }
-                .padding(.bottom, Space.s6)
             }
         }
         .padding(.horizontal, Space.s6)
@@ -246,4 +256,11 @@ struct ModelStatusView: View {
         .padding(Space.s3)
         .tronCard()
     }
+}
+
+/// Which tab the main window shows, so the menu bar can open the dictionary directly.
+@MainActor
+final class WindowRouter: ObservableObject {
+    static let shared = WindowRouter()
+    @Published var tab: MainView.Tab = .notes
 }
