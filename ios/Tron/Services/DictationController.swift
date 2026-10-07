@@ -53,6 +53,10 @@ final class DictationController: ObservableObject {
     /// Live preview: text already settled, and how many samples it covers. Only the tail after it is re-read.
     private var frozenText = ""
     private var frozenSamples = 0
+    /// Words of the previous pass, and the words already shown. Shown text only grows:
+    /// a word appears once two passes in a row agree on it, so the cursor never steps back.
+    private var previousWords: [String] = []
+    private var shownWords: [String] = []
     /// Mic kept on in the background after a keyboard dictation, so the next one starts without opening Tron.
     @Published private(set) var armed = false
     private var armedUntil = Date.distantPast
@@ -128,6 +132,8 @@ final class DictationController: ObservableObject {
         sessionID = UUID().uuidString
         frozenText = ""
         frozenSamples = 0
+        previousWords = []
+        shownWords = []
         liveForKeyboard = mode == .keyboard || (mode == .actionButton && store.actionButtonMode == .miniKeyboard)
         lastPreview = .distantPast
         phase = .recording
@@ -353,8 +359,8 @@ final class DictationController: ObservableObject {
         // Notes only preview in the app; keyboard dictations stream to the cursor from the background too.
         let live = mode != .note && liveForKeyboard
         guard live || UIApplication.shared.applicationState == .active, engine.isReady else { return }
-        // Refresh about every 300 ms, one pass at a time (a busy tick is simply skipped).
-        guard previewTask == nil, elapsed >= 0.5, Date().timeIntervalSince(lastPreview) >= 0.3 else { return }
+        // Refresh about every 200 ms, one pass at a time (a busy tick is simply skipped).
+        guard previewTask == nil, elapsed >= 0.4, Date().timeIntervalSince(lastPreview) >= 0.2 else { return }
         lastPreview = Date()
         let all = recorder.snapshot()
         let rate = AudioRecorder.sampleRate
@@ -373,15 +379,23 @@ final class DictationController: ObservableObject {
                   phase == .recording, sessionID == session else { return }
             // Words that start in the context are already part of the settled text.
             var tail = words.filter { $0.start >= context - 0.05 }
-            // Past 12 s of tail, settle everything up to 5 s before the end (cut between two words).
-            if length - context > 12, let cut = tail.lastIndex(where: { $0.end <= length - 5 }), cut + 1 < tail.count {
+            // Past 8 s of tail, settle everything up to 3 s before the end (cut between two words).
+            if length - context > 8, let cut = tail.lastIndex(where: { $0.end <= length - 3 }), cut + 1 < tail.count {
                 let settled = tail[...cut].map(\.text).joined(separator: " ")
                 frozenText = frozenText.isEmpty ? settled : frozenText + " " + settled
                 frozenSamples = start + Int(tail[cut + 1].start * rate)
                 tail = Array(tail[(cut + 1)...])
             }
-            let tailText = tail.map(\.text).joined(separator: " ")
-            let text = Corrections.apply([frozenText, tailText].filter { !$0.isEmpty }.joined(separator: " "))
+            let current = frozenText.split(separator: " ").map(String.init) + tail.map(\.text)
+            // Agreement with the previous pass; the last word stays out until it is confirmed.
+            var agreed = 0
+            while agreed < min(current.count, previousWords.count), current[agreed] == previousWords[agreed] { agreed += 1 }
+            previousWords = current
+            let candidate = Array(current.prefix(agreed))
+            // Only ever extend what is shown; a later change of an earlier word waits for the final pass.
+            guard candidate.count > shownWords.count else { return }
+            shownWords += candidate[shownWords.count...]
+            let text = Corrections.apply(shownWords.joined(separator: " "))
             if ProcessInfo.processInfo.environment["TRON_LOG_PREVIEW"] != nil || Int.random(in: 0..<20) == 0 {
                 print("[Tron] preview tail=\(String(format: "%.1f", length))s asr=\(String(format: "%.2f", Date().timeIntervalSince(t0)))s thermal=\(ProcessInfo.processInfo.thermalState.rawValue)")
             }
