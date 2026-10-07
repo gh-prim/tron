@@ -66,19 +66,39 @@ enum TronColor {
     static let warningTint = Color(light: 0xF8ECD0, dark: 0x3A2C0C)
 }
 
-/// Instrument Sans and JetBrains Mono fall back to the system faces until the font files are bundled.
+/// Instrument Sans and JetBrains Mono, bundled as static weights (Shared/Fonts, SIL Open Font License).
 enum TronFont {
-    static let display = Font.custom("Instrument Sans", size: 40, relativeTo: .largeTitle).weight(.semibold)
-    static let large = Font.custom("Instrument Sans", size: 30, relativeTo: .largeTitle).weight(.semibold)
-    static let title = Font.custom("Instrument Sans", size: 22, relativeTo: .title2).weight(.semibold)
-    static let heading = Font.custom("Instrument Sans", size: 17, relativeTo: .headline).weight(.semibold)
-    static let body = Font.custom("Instrument Sans", size: 15, relativeTo: .body)
-    static let bodyStrong = Font.custom("Instrument Sans", size: 15, relativeTo: .body).weight(.semibold)
-    static let live = Font.custom("Instrument Sans", size: 17, relativeTo: .body)
-    static let label = Font.custom("Instrument Sans", size: 13, relativeTo: .subheadline).weight(.medium)
-    static let caption = Font.custom("Instrument Sans", size: 12, relativeTo: .caption)
-    static let transcript = Font.system(size: 14, design: .monospaced)
-    static let meta = Font.system(size: 12, design: .monospaced)
+    enum Weight: String { case regular = "Regular", medium = "Medium", semibold = "SemiBold" }
+
+    private static func sans(_ weight: String, _ size: CGFloat, _ style: Font.TextStyle) -> Font {
+        .custom("InstrumentSans-\(weight)", size: size, relativeTo: style)
+    }
+
+    /// Instrument Sans at any size, scaling with Dynamic Type like body text.
+    static func sans(_ size: CGFloat, _ weight: Weight = .regular) -> Font {
+        .custom("InstrumentSans-\(weight.rawValue)", size: size, relativeTo: .body)
+    }
+
+    static func mono(_ size: CGFloat) -> Font {
+        .custom("JetBrainsMono-Regular", size: size, relativeTo: .caption)
+    }
+
+    static let display = sans("SemiBold", 40, .largeTitle)
+    static let large = sans("SemiBold", 30, .largeTitle)
+    static let title = sans("SemiBold", 22, .title2)
+    /// Onboarding step titles (28/34).
+    static let stepTitle = sans("SemiBold", 28, .title)
+    static let heading = sans("SemiBold", 17, .headline)
+    static let body = sans("Regular", 15, .body)
+    static let bodyStrong = sans("SemiBold", 15, .body)
+    static let bodyMedium = sans("Medium", 15, .body)
+    static let live = sans("Regular", 17, .body)
+    static let field = sans("Regular", 17, .body)
+    static let label = sans("Medium", 13, .subheadline)
+    static let caption = sans("Regular", 12, .caption)
+    static let small = sans("Regular", 13, .footnote)
+    static let transcript = Font.custom("JetBrainsMono-Regular", size: 14, relativeTo: .body)
+    static let meta = Font.custom("JetBrainsMono-Regular", size: 12, relativeTo: .caption)
 }
 
 enum Space {

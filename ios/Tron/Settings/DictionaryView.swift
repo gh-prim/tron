@@ -5,6 +5,7 @@ struct DictionaryView: View {
     @State private var entries: [Correction] = []
     @State private var editing: Correction?
     @State private var adding = false
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         List {
@@ -19,14 +20,14 @@ struct DictionaryView: View {
                     Button { editing = entry } label: {
                         HStack(spacing: Space.s2) {
                             Text(entry.heard)
-                                .font(.system(size: 15))
+                                .font(TronFont.sans(15))
                                 .foregroundStyle(TronColor.muted)
                                 .strikethrough(color: TronColor.lineStrong)
                             Image(systemName: "arrow.right")
-                                .font(.system(size: 12, weight: .semibold))
+                                .font(TronFont.sans(12, .semibold))
                                 .foregroundStyle(TronColor.lineStrong)
                             Text(entry.correct)
-                                .font(.system(size: 15, weight: .semibold))
+                                .font(TronFont.sans(15, .semibold))
                                 .foregroundStyle(TronColor.ink)
                             Spacer(minLength: 0)
                         }
@@ -48,8 +49,10 @@ struct DictionaryView: View {
         .background(TronColor.paper.ignoresSafeArea())
         .navigationTitle("Dictionnaire")
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden()
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
+            BackLink(title: "Réglages") { dismiss() }
+            PlainTrailingItem {
                 Button { adding = true } label: { Image(systemName: "plus") }
                     .foregroundStyle(TronColor.brand)
                     .accessibilityLabel("Ajouter une correction")

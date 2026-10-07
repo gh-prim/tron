@@ -11,15 +11,17 @@ struct StatsRow: View {
             cell("\(stats.minutesSaved) min", "gagnées")
             cell("\(stats.wordsPerMinute)", "mots par minute")
         }
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     private func cell(_ value: String, _ label: String) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(value).font(TronFont.heading).foregroundStyle(TronColor.ink)
-            Text(label).font(TronFont.caption).foregroundStyle(TronColor.muted).lineLimit(2)
+            Text(value).font(TronFont.sans(17, .semibold)).foregroundStyle(TronColor.ink).monospacedDigit()
+            Text(label).font(TronFont.sans(11)).foregroundStyle(TronColor.muted).lineLimit(2)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(Space.s3)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .padding(.horizontal, 10)
+        .padding(.vertical, Space.s2)
         .tronCard()
     }
 }
@@ -30,7 +32,7 @@ struct NoteRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(note.title).font(TronFont.bodyStrong).foregroundStyle(TronColor.ink).lineLimit(1)
-            Text(note.text).font(.system(size: 13)).foregroundStyle(TronColor.muted).lineLimit(1)
+            Text(note.text).font(TronFont.sans(13)).foregroundStyle(TronColor.muted).lineLimit(1)
             Text("\(DateLabel.short(note.createdAt)) · \(DateLabel.duration(note.duration))")
                 .font(TronFont.meta)
                 .foregroundStyle(TronColor.muted)
@@ -45,19 +47,68 @@ struct NoteRow: View {
 
 struct HistoryRow: View {
     let item: HistoryItem
+    let copy: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("\(item.source) · \(DateLabel.short(item.createdAt))")
-                .font(TronFont.caption.weight(.medium))
-                .foregroundStyle(TronColor.muted)
-            Text(item.text).font(.system(size: 14)).foregroundStyle(TronColor.ink).lineLimit(2)
+        HStack(alignment: .top, spacing: Space.s3) {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text(String(item.source.prefix(1)))
+                        .font(TronFont.sans(10, .semibold))
+                        .foregroundStyle(TronColor.brand)
+                        .frame(width: 16, height: 16)
+                        .background(TronColor.brandTint, in: RoundedRectangle(cornerRadius: 5))
+                    Text("\(item.source) · \(item.createdAt.formatted(date: .omitted, time: .shortened))")
+                        .font(TronFont.sans(12, .medium))
+                        .foregroundStyle(TronColor.muted)
+                }
+                Text(item.text).font(TronFont.sans(14)).foregroundStyle(TronColor.ink).lineLimit(2)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            Button(action: copy) {
+                Image(systemName: "doc.on.doc")
+                    .font(.system(size: 15))
+                    .foregroundStyle(TronColor.muted)
+                    .frame(width: 44, height: 44)
+            }
+            .accessibilityLabel("Copier")
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, Space.s4)
+        .padding(.leading, Space.s4)
+        .padding(.trailing, Space.s2)
         .padding(.vertical, Space.s3)
         .tronCard()
-        .contentShape(Rectangle())
+    }
+}
+
+/// Pill segmented control, as designed (Notes / Historique).
+struct PillSegments<T: Hashable>: View {
+    let items: [(T, String)]
+    @Binding var selection: T
+
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(items, id: \.0) { value, title in
+                let on = value == selection
+                Button {
+                    withAnimation(.easeOut(duration: 0.2)) { selection = value }
+                } label: {
+                    Text(title)
+                        .font(TronFont.sans(13, on ? .semibold : .medium))
+                        .foregroundStyle(on ? TronColor.ink : TronColor.muted)
+                        .frame(maxWidth: .infinity, minHeight: 36)
+                        .background {
+                            if on {
+                                Capsule().fill(TronColor.surface).shadow(color: .black.opacity(0.12), radius: 1, y: 1)
+                            }
+                        }
+                        .contentShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(on ? .isSelected : [])
+            }
+        }
+        .padding(4)
+        .background(TronColor.line, in: Capsule())
     }
 }
 

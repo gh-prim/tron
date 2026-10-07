@@ -1,11 +1,11 @@
 import SwiftUI
 import UIKit
 
-/// Short test onboarding: welcome, first name, language, microphone, Action Button (optional), ready.
-/// No account yet: sign-in (Supabase) comes later.
+/// Onboarding, as designed in Claude Design (Onboarding, iOS): welcome, first name, language, usage,
+/// microphone, Action Button (optional), ready. The account step comes with sign-in (Supabase).
 struct OnboardingView: View {
     enum Step: Int, CaseIterable {
-        case welcome, name, language, mic, actionButton, done
+        case welcome, name, language, usage, mic, actionButton, done
     }
 
     @EnvironmentObject private var store: AppStore
@@ -13,7 +13,7 @@ struct OnboardingView: View {
     @State private var forward = true
 
     var body: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: Space.s6) {
             if step != .welcome && step != .done {
                 topBar
             }
@@ -21,7 +21,8 @@ struct OnboardingView: View {
                 switch step {
                 case .welcome: WelcomeStep { go(.name) }
                 case .name: NameStep { go(.language) }
-                case .language: LanguageStep { go(.mic) }
+                case .language: LanguageStep { go(.usage) }
+                case .usage: UsageStep { go(.mic) }
                 case .mic: MicStep { go(DeviceInfo.hasActionButton ? .actionButton : .done) }
                 case .actionButton: ActionButtonStep { go(.done) }
                 case .done: DoneStep()
@@ -33,13 +34,14 @@ struct OnboardingView: View {
                 removal: .move(edge: forward ? .leading : .trailing).combined(with: .opacity)
             ))
         }
+        .padding(.top, Space.s2)
         .padding(.horizontal, Space.s4)
         .padding(.bottom, Space.s4)
         .background(TronColor.paper.ignoresSafeArea())
     }
 
     private var topBar: some View {
-        HStack {
+        HStack(spacing: Space.s3) {
             Button {
                 go(previous, forward: false)
             } label: {
@@ -48,13 +50,23 @@ struct OnboardingView: View {
                     .frame(width: 44, height: 44)
             }
             .foregroundStyle(TronColor.ink)
+            .padding(.leading, -10)
             .accessibilityLabel("Retour")
-            Spacer()
             if let progress {
-                Text(progress)
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(TronColor.line)
+                        Capsule().fill(TronColor.brand).frame(width: geo.size.width * CGFloat(progress) / CGFloat(Self.counted))
+                    }
+                }
+                .frame(height: 4)
+                .accessibilityHidden(true)
+                Text("\(progress)/\(Self.counted)")
                     .font(TronFont.meta)
                     .foregroundStyle(TronColor.muted)
+                    .accessibilityLabel("Étape \(progress) sur \(Self.counted)")
             } else {
+                Spacer()
                 Text("Optionnel")
                     .font(TronFont.meta)
                     .foregroundStyle(TronColor.muted)
@@ -63,11 +75,15 @@ struct OnboardingView: View {
         .frame(height: 44)
     }
 
-    private var progress: String? {
+    /// Steps shown in the progress bar.
+    private static let counted = 4
+
+    private var progress: Int? {
         switch step {
-        case .name: return "1/3"
-        case .language: return "2/3"
-        case .mic: return "3/3"
+        case .name: return 1
+        case .language: return 2
+        case .usage: return 3
+        case .mic: return 4
         default: return nil
         }
     }
@@ -91,11 +107,12 @@ struct OnboardingView: View {
 private struct StepHeader: View {
     let title: String
     var subtitle: String? = nil
+    var centered = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Space.s2) {
+        VStack(alignment: centered ? .center : .leading, spacing: Space.s4) {
             Text(title)
-                .font(TronFont.large)
+                .font(TronFont.stepTitle)
                 .foregroundStyle(TronColor.ink)
                 .fixedSize(horizontal: false, vertical: true)
             if let subtitle {
@@ -105,8 +122,25 @@ private struct StepHeader: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.top, Space.s4)
+        .multilineTextAlignment(centered ? .center : .leading)
+        .frame(maxWidth: .infinity, alignment: centered ? .center : .leading)
+    }
+}
+
+/// Logo with the "tron" wordmark.
+struct TronLogo: View {
+    var height: CGFloat = 40
+    var speaking = false
+
+    var body: some View {
+        HStack(spacing: height * 0.3) {
+            TronMark(height: height, speaking: speaking)
+            Text("tron")
+                .font(.custom("InstrumentSans-SemiBold", size: height * 0.95))
+                .foregroundStyle(TronColor.ink)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Tron")
     }
 }
 
@@ -117,17 +151,16 @@ private struct WelcomeStep: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Space.s6) {
             Spacer()
-            TronMark(height: 64, speaking: !reduceMotion)
-            VStack(alignment: .leading, spacing: 0) {
-                Text("Parlez.")
-                Text("Ça reste ici.").foregroundStyle(TronColor.brand)
-            }
-            .font(TronFont.display)
-            .foregroundStyle(TronColor.ink)
+            TronLogo(height: 40, speaking: !reduceMotion)
+            Text("Parlez.\nÇa reste ici.")
+                .font(TronFont.display)
+                .foregroundStyle(TronColor.ink)
+                .fixedSize(horizontal: false, vertical: true)
             Text("Tron transcrit votre voix directement sur votre iPhone. Rien n'est envoyé sur un serveur.")
                 .font(TronFont.body)
                 .foregroundStyle(TronColor.muted)
-            Badge(text: "Traitement sur l'appareil", systemImage: "lock.fill")
+                .fixedSize(horizontal: false, vertical: true)
+            Badge(text: "Traitement sur l'appareil", systemImage: "lock")
             Spacer()
             Button("Commencer", action: next)
                 .buttonStyle(PrimaryButtonStyle())
@@ -142,14 +175,15 @@ private struct NameStep: View {
     @State private var name = ""
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Space.s6) {
+        VStack(alignment: .leading, spacing: Space.s4) {
             StepHeader(title: "Comment vous appelez-vous ?", subtitle: "Tron utilise votre prénom pour s'adresser à vous.")
             VStack(alignment: .leading, spacing: 6) {
                 Text("Prénom")
                     .font(TronFont.label)
                     .foregroundStyle(TronColor.ink)
                 TextField("", text: $name)
-                    .font(.system(size: 17))
+                    .font(TronFont.field)
+                    .foregroundStyle(TronColor.ink)
                     .textContentType(.givenName)
                     .textInputAutocapitalization(.words)
                     .submitLabel(.continue)
@@ -163,6 +197,7 @@ private struct NameStep: View {
                             .stroke(focused ? TronColor.brand : TronColor.lineStrong, lineWidth: focused ? 2 : 1)
                     )
             }
+            .padding(.top, Space.s2)
             Spacer()
             Button("Continuer", action: submit)
                 .buttonStyle(PrimaryButtonStyle())
@@ -189,8 +224,8 @@ private struct LanguageStep: View {
     @EnvironmentObject private var store: AppStore
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Space.s6) {
-            StepHeader(title: "Dans quelle langue parlez-vous ?", subtitle: "Tron règle le modèle de reconnaissance sur cette langue.")
+        VStack(alignment: .leading, spacing: Space.s4) {
+            StepHeader(title: "Dans quelle langue parlez-vous ?", subtitle: "Tron charge le modèle de reconnaissance adapté.")
             VStack(spacing: 0) {
                 ForEach(Array(SpokenLanguage.allCases.enumerated()), id: \.element) { index, lang in
                     if index > 0 { RowDivider() }
@@ -199,26 +234,26 @@ private struct LanguageStep: View {
                     } label: {
                         HStack(spacing: Space.s3) {
                             RadioDot(selected: store.language == lang)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(lang.name).font(TronFont.bodyStrong).foregroundStyle(TronColor.ink)
-                                if lang == SpokenLanguage.deviceDefault {
-                                    Text("Langue de l'iPhone").font(TronFont.caption).foregroundStyle(TronColor.muted)
-                                }
-                            }
+                            Text(lang.name).font(TronFont.body).foregroundStyle(TronColor.ink)
                             Spacer()
+                            if lang == SpokenLanguage.deviceDefault {
+                                Text("Langue de l'iPhone").font(TronFont.meta).foregroundStyle(TronColor.muted)
+                            }
                         }
-                        .padding(.horizontal, 14)
-                        .frame(minHeight: 52)
+                        .padding(.horizontal, Space.s4)
+                        .frame(height: 54)
                         .background(store.language == lang ? TronColor.brandTint : .clear)
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .accessibilityAddTraits(store.language == lang ? .isSelected : [])
                 }
             }
             .tronCard()
             .clipShape(RoundedRectangle(cornerRadius: Radius.md))
+            .padding(.top, Space.s2)
             Text("Vous pourrez la changer dans les réglages.")
-                .font(TronFont.caption)
+                .font(TronFont.small)
                 .foregroundStyle(TronColor.muted)
             Spacer()
             Button("Continuer", action: next)
@@ -237,41 +272,126 @@ struct RadioDot: View {
     }
 }
 
+private struct UsageStep: View {
+    let next: () -> Void
+    /// Comma-separated choices, kept for later personalization (stays on the iPhone).
+    @AppStorage("usage") private var usageRaw = "apps"
+
+    private struct Choice: Identifiable {
+        let id: String
+        let icon: String
+        let title: String
+        let detail: String
+    }
+
+    private let choices = [
+        Choice(id: "apps", icon: "keyboard", title: "Dicter dans mes apps", detail: "Mails, messages, documents"),
+        Choice(id: "meetings", icon: "person.2", title: "Transcrire mes réunions", detail: "Avec qui parle, et quand"),
+        Choice(id: "notes", icon: "doc.text", title: "Prendre des notes vocales", detail: "Idées, mémos, comptes rendus"),
+        Choice(id: "other", icon: "plus.circle", title: "Autre chose", detail: "On verra à l'usage"),
+    ]
+
+    private var selected: Set<String> { Set(usageRaw.split(separator: ",").map(String.init)) }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Space.s4) {
+            StepHeader(title: "Vous allez utiliser Tron pour…", subtitle: "Plusieurs choix possibles.")
+            VStack(spacing: Space.s2) {
+                ForEach(choices) { choice in
+                    let on = selected.contains(choice.id)
+                    Button { toggle(choice.id) } label: {
+                        HStack(spacing: Space.s3) {
+                            Image(systemName: choice.icon)
+                                .font(.system(size: 17))
+                                .foregroundStyle(TronColor.brand)
+                                .frame(width: 40, height: 40)
+                                .background(on ? TronColor.surface : TronColor.paper, in: RoundedRectangle(cornerRadius: Radius.md))
+                            VStack(alignment: .leading, spacing: 0) {
+                                Text(choice.title).font(TronFont.bodyStrong).foregroundStyle(TronColor.ink)
+                                Text(choice.detail).font(TronFont.small).foregroundStyle(TronColor.muted)
+                            }
+                            Spacer()
+                            ZStack {
+                                RoundedRectangle(cornerRadius: Radius.sm)
+                                    .fill(on ? TronColor.brand : TronColor.surface)
+                                RoundedRectangle(cornerRadius: Radius.sm)
+                                    .strokeBorder(on ? TronColor.brand : TronColor.lineStrong, lineWidth: 1.5)
+                                if on {
+                                    Image(systemName: "checkmark")
+                                        .font(.system(size: 12, weight: .bold))
+                                        .foregroundStyle(TronColor.onBrand)
+                                }
+                            }
+                            .frame(width: 22, height: 22)
+                        }
+                        .padding(.horizontal, Space.s4)
+                        .padding(.vertical, 14)
+                        .background(on ? TronColor.brandTint : TronColor.surface, in: RoundedRectangle(cornerRadius: Radius.md))
+                        .overlay(RoundedRectangle(cornerRadius: Radius.md).stroke(on ? TronColor.brand : TronColor.line, lineWidth: 1))
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityAddTraits(on ? .isSelected : [])
+                }
+            }
+            .padding(.top, Space.s2)
+            Spacer()
+            Button("Continuer", action: next)
+                .buttonStyle(PrimaryButtonStyle())
+        }
+    }
+
+    private func toggle(_ id: String) {
+        var set = selected
+        if set.contains(id) { set.remove(id) } else { set.insert(id) }
+        usageRaw = choices.map(\.id).filter(set.contains).joined(separator: ",")
+    }
+}
+
+/// Mic in a soft halo with two expanding rings (Micro and Prêt steps).
+private struct MicHalo: View {
+    var size: CGFloat = 112
+    var filled = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var pulse = false
+
+    var body: some View {
+        ZStack {
+            ForEach(0..<2) { i in
+                Circle()
+                    .stroke(TronColor.brand, lineWidth: 2)
+                    .frame(width: size, height: size)
+                    .scaleEffect(pulse ? 1.6 : 1)
+                    .opacity(pulse ? 0 : 0.6)
+                    .animation(reduceMotion ? nil : .easeOut(duration: 2.4).repeatForever(autoreverses: false).delay(Double(i) * 1.2), value: pulse)
+            }
+            Circle().fill(filled ? TronColor.brand : TronColor.brandTint).frame(width: size, height: size)
+            Image(systemName: "mic")
+                .font(.system(size: size * 0.3, weight: .regular))
+                .foregroundStyle(filled ? TronColor.onBrand : TronColor.brand)
+        }
+        .frame(width: size * 1.6, height: size * 1.6)
+        .onAppear { pulse = true }
+    }
+}
+
 private struct MicStep: View {
     let next: () -> Void
     @EnvironmentObject private var store: AppStore
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var pulse = false
     @State private var denied = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Space.s6) {
-            HStack {
-                Spacer()
-                ZStack {
-                    ForEach(0..<2) { i in
-                        Circle()
-                            .stroke(TronColor.brand, lineWidth: 2)
-                            .frame(width: 96, height: 96)
-                            .scaleEffect(pulse ? 1.6 : 1)
-                            .opacity(pulse ? 0 : 0.6)
-                            .animation(reduceMotion ? nil : .easeOut(duration: 2.4).repeatForever(autoreverses: false).delay(Double(i) * 1.2), value: pulse)
-                    }
-                    Circle().fill(TronColor.brand).frame(width: 96, height: 96)
-                    Image(systemName: "mic")
-                        .font(.system(size: 38, weight: .regular))
-                        .foregroundStyle(TronColor.onBrand)
-                }
-                .frame(height: 160)
-                Spacer()
-            }
-            .padding(.top, Space.s6)
-            StepHeader(title: "Tron a besoin du micro", subtitle: "Pour vous entendre, et c'est tout.")
+        VStack(alignment: .leading, spacing: Space.s4) {
+            MicHalo()
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, -Space.s4)
+            StepHeader(title: "Tron a besoin du micro", subtitle: "Pour vous entendre, et c'est tout.", centered: true)
             VStack(alignment: .leading, spacing: Space.s3) {
-                bullet("lock", "L'audio est traité sur cet iPhone, jamais envoyé.")
-                bullet("hand.tap", "Le micro ne s'active que quand vous le décidez.")
-                bullet("arrow.uturn.backward", "Vous pouvez retirer l'accès à tout moment.")
+                bullet("iphone", "L'audio est traité sur cet iPhone, jamais envoyé.")
+                bullet("smallcircle.filled.circle", "Le micro ne s'active que quand vous le décidez.")
+                bullet("checkmark.circle", "Vous pouvez retirer l'accès à tout moment.")
             }
+            .padding(.top, Space.s2)
             Spacer()
             if denied {
                 Text("L'accès est refusé. Ouvrez Réglages, puis Tron, puis activez Micro.")
@@ -290,18 +410,18 @@ private struct MicStep: View {
                     Text("iOS va vous demander de confirmer.")
                         .font(TronFont.caption)
                         .foregroundStyle(TronColor.muted)
+                        .frame(maxWidth: .infinity)
                 }
             }
         }
-        .onAppear { pulse = true }
     }
 
     private func bullet(_ icon: String, _ text: String) -> some View {
         HStack(alignment: .top, spacing: Space.s3) {
             Image(systemName: icon)
-                .font(.system(size: 15, weight: .medium))
+                .font(.system(size: 16))
                 .foregroundStyle(TronColor.brand)
-                .frame(width: 22)
+                .frame(width: 18)
             Text(text)
                 .font(TronFont.body)
                 .foregroundStyle(TronColor.ink)
@@ -324,57 +444,64 @@ private struct ActionButtonStep: View {
     @State private var pulse = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Space.s6) {
-            HStack {
-                Spacer()
-                phone
-                Spacer()
-            }
-            .padding(.top, Space.s4)
-            StepHeader(title: "Dictez avec le bouton Action", subtitle: "Un appui long, vous parlez, le texte est prêt à coller. Sans chercher l'app.")
+        VStack(alignment: .leading, spacing: Space.s4) {
+            phone
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, Space.s2)
+            StepHeader(title: "Dictez avec le bouton Action", subtitle: "Un appui long, vous parlez, le texte apparaît. Sans ouvrir l'app.")
             VStack(alignment: .leading, spacing: Space.s3) {
                 step(1, "Ouvrez Réglages, puis Bouton Action.")
                 step(2, "Choisissez Raccourci.")
                 step(3, "Sélectionnez « Dicter avec Tron ».")
             }
+            .padding(.top, Space.s2)
             Spacer()
             VStack(spacing: Space.s2) {
-                Button("C'est fait", action: next)
-                    .buttonStyle(PrimaryButtonStyle())
+                Button("Ouvrir les Réglages") {
+                    if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
+                    next()
+                }
+                .buttonStyle(PrimaryButtonStyle())
                 Button("Passer", action: next)
-                    .buttonStyle(GhostButtonStyle(color: TronColor.muted))
+                    .buttonStyle(GhostButtonStyle())
             }
         }
         .onAppear { pulse = true }
     }
 
+    /// An iPhone outline with Tron on screen and the Action Button being pressed.
     private var phone: some View {
         ZStack(alignment: .topLeading) {
             RoundedRectangle(cornerRadius: 22)
-                .stroke(TronColor.lineStrong, lineWidth: 2)
-                .frame(width: 88, height: 150)
-            Capsule()
-                .fill(TronColor.live)
-                .frame(width: 5, height: 22)
-                .offset(x: -4, y: 34)
-                .scaleEffect(pulse ? 1.15 : 1, anchor: .center)
-                .opacity(pulse ? 1 : 0.7)
-                .animation(reduceMotion ? nil : .easeInOut(duration: 0.9).repeatForever(autoreverses: true), value: pulse)
+                .fill(TronColor.surface)
+                .overlay(RoundedRectangle(cornerRadius: 22).strokeBorder(TronColor.ink, lineWidth: 3))
+                .overlay(TronMark(height: 30))
+                .frame(width: 104, height: 200)
+            sideButton(top: 34, height: 22, color: TronColor.brand)
+                .offset(x: pulse ? 2 : 0)
+                .shadow(color: TronColor.brand.opacity(pulse ? 0.35 : 0), radius: pulse ? 4 : 0)
+                .animation(reduceMotion ? nil : .easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: pulse)
+            sideButton(top: 66, height: 30, color: TronColor.lineStrong)
+            sideButton(top: 102, height: 30, color: TronColor.lineStrong)
         }
         .accessibilityHidden(true)
     }
 
+    private func sideButton(top: CGFloat, height: CGFloat, color: Color) -> some View {
+        RoundedRectangle(cornerRadius: 3)
+            .fill(color)
+            .frame(width: 5, height: height)
+            .offset(x: -7, y: top)
+    }
+
     private func step(_ n: Int, _ text: String) -> some View {
-        HStack(alignment: .top, spacing: Space.s3) {
+        HStack(alignment: .firstTextBaseline, spacing: Space.s3) {
             Text("\(n)")
-                .font(TronFont.label)
+                .font(TronFont.meta)
                 .foregroundStyle(TronColor.brand)
-                .frame(width: 26, height: 26)
-                .background(TronColor.brandTint, in: Circle())
             Text(text)
                 .font(TronFont.body)
                 .foregroundStyle(TronColor.ink)
-                .padding(.top, 3)
         }
     }
 }
@@ -396,18 +523,30 @@ private struct DoneStep: View {
                 .font(TronFont.body)
                 .foregroundStyle(TronColor.muted)
                 .multilineTextAlignment(.center)
-            Badge(text: "\(store.language.name) · \(TranscriptionEngine.modelName) · sur l'appareil")
+            Button(action: startFirstNote) {
+                MicHalo(size: 96, filled: true)
+            }
+            .buttonStyle(.plain)
+            .padding(.vertical, -Space.s4)
+            .accessibilityLabel("Dicter")
+            Text("\(store.language.name) · \(TranscriptionEngine.modelName) · sur l'appareil")
+                .font(TronFont.meta)
+                .foregroundStyle(TronColor.muted)
             ModelStatusView()
             Spacer()
-            Button {
-                store.onboardingDone = true
-            } label: {
-                Label("Aller à l'accueil", systemImage: "mic")
-            }
-            .buttonStyle(PrimaryButtonStyle())
+            Button("Plus tard") { store.onboardingDone = true }
+                .buttonStyle(GhostButtonStyle())
         }
         .onAppear {
             withAnimation(.easeOut(duration: 0.6).delay(0.15)) { appeared = true }
+        }
+    }
+
+    /// Opens the home screen already listening, for the first note.
+    private func startFirstNote() {
+        store.onboardingDone = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            DictationController.shared.start(mode: .note)
         }
     }
 }
