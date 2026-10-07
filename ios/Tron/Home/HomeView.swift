@@ -38,7 +38,7 @@ struct HomeView: View {
             .navigationDestination(item: $openedNote) { note in
                 NoteDetailView(noteID: note.id, justCreated: note.id == justCreatedID)
             }
-            .sheet(isPresented: $showSettings) { SettingsView() }
+            .navigationDestination(isPresented: $showSettings) { SettingsView() }
             .overlay(alignment: .bottom) { toastView }
         }
         .onChange(of: dictation.lastNote) { _, note in
@@ -72,15 +72,11 @@ struct HomeView: View {
 
     private var header: some View {
         HStack {
-            TronMark(height: 26)
-            Text("tron")
-                .font(.system(size: 24, weight: .semibold, design: .rounded))
-                .foregroundStyle(TronColor.ink)
-                .accessibilityLabel("Tron")
+            TronLogo(height: 22)
             Spacer()
             Button { showSettings = true } label: {
                 Image(systemName: "gearshape")
-                    .font(.system(size: 20))
+                    .font(TronFont.sans(20))
                     .frame(width: 44, height: 44)
             }
             .foregroundStyle(TronColor.ink)
@@ -165,10 +161,7 @@ struct HomeView: View {
 
     private var tabs: some View {
         VStack(spacing: Space.s4) {
-            Picker("Vue", selection: $tab) {
-                ForEach(Tab.allCases, id: \.self) { Text($0.rawValue).tag($0) }
-            }
-            .pickerStyle(.segmented)
+            PillSegments(items: Tab.allCases.map { ($0, $0.rawValue) }, selection: $tab)
 
             switch tab {
             case .notes: notesList
@@ -202,15 +195,22 @@ struct HomeView: View {
                 EmptyStateView(
                     icon: "clock.arrow.circlepath",
                     title: "Rien dans l'historique",
-                    message: "Ce que vous dictez avec le bouton Action apparaît ici. Le clavier Tron arrive dans une prochaine version."
+                    message: "Ce que vous dictez avec le clavier Tron ou le bouton Action apparaît ici."
                 )
             }
-            ForEach(store.history) { item in
-                Button {
-                    UIPasteboard.general.string = item.text
-                    show("Copié.")
-                } label: { HistoryRow(item: item) }
-                    .buttonStyle(.plain)
+            ForEach(historyDays, id: \.title) { day in
+                Text(day.title)
+                    .font(TronFont.sans(12, .medium))
+                    .foregroundStyle(TronColor.muted)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 4)
+                    .padding(.top, 4)
+                ForEach(day.items) { item in
+                    HistoryRow(item: item) {
+                        UIPasteboard.general.string = item.text
+                        show("Copié.")
+                    }
+                }
             }
         }
     }
@@ -233,6 +233,28 @@ struct HomeView: View {
 
     // MARK: Helpers
 
+    /// History grouped by day: "Aujourd'hui", "Hier", then the date.
+    private var historyDays: [(title: String, items: [HistoryItem])] {
+        let cal = Calendar.current
+        var days: [(title: String, items: [HistoryItem])] = []
+        for item in store.history {
+            let title: String
+            if cal.isDateInToday(item.createdAt) {
+                title = "Aujourd'hui"
+            } else if cal.isDateInYesterday(item.createdAt) {
+                title = "Hier"
+            } else {
+                title = item.createdAt.formatted(.dateTime.weekday(.wide).day().month(.wide)).capitalized
+            }
+            if days.last?.title == title {
+                days[days.count - 1].items.append(item)
+            } else {
+                days.append((title, [item]))
+            }
+        }
+        return days
+    }
+
     private func show(_ message: String) {
         withAnimation { toast = message }
         DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) {
@@ -248,101 +270,6 @@ struct HomeView: View {
 
     private func format(_ t: TimeInterval) -> String {
         let s = Int(t)
-        return String(format: "%d:%02d", s / 60, s % 60)
-    }
-}
-
-// MARK: - Rows
-
-struct StatsRow: View {
-    let stats: AppStore.WeekStats
-
-    var body: some View {
-        HStack(spacing: Space.s2) {
-            cell(stats.words.formatted(), "mots cette semaine")
-            cell("\(stats.minutesSaved) min", "gagnées")
-            cell("\(stats.wordsPerMinute)", "mots par minute")
-        }
-    }
-
-    private func cell(_ value: String, _ label: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(value).font(TronFont.heading).foregroundStyle(TronColor.ink)
-            Text(label).font(TronFont.caption).foregroundStyle(TronColor.muted).lineLimit(2)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(Space.s3)
-        .tronCard()
-    }
-}
-
-struct NoteRow: View {
-    let note: Note
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(note.title).font(TronFont.bodyStrong).foregroundStyle(TronColor.ink).lineLimit(1)
-            Text(note.text).font(.system(size: 13)).foregroundStyle(TronColor.muted).lineLimit(1)
-            Text("\(DateLabel.short(note.createdAt)) · \(DateLabel.duration(note.duration))")
-                .font(TronFont.meta)
-                .foregroundStyle(TronColor.muted)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, Space.s4)
-        .padding(.vertical, Space.s3)
-        .tronCard()
-        .contentShape(Rectangle())
-    }
-}
-
-struct HistoryRow: View {
-    let item: HistoryItem
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("\(item.source) · \(DateLabel.short(item.createdAt))")
-                .font(TronFont.caption.weight(.medium))
-                .foregroundStyle(TronColor.muted)
-            Text(item.text).font(.system(size: 14)).foregroundStyle(TronColor.ink).lineLimit(2)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, Space.s4)
-        .padding(.vertical, Space.s3)
-        .tronCard()
-        .contentShape(Rectangle())
-    }
-}
-
-struct EmptyStateView: View {
-    let icon: String
-    let title: String
-    let message: String
-
-    var body: some View {
-        VStack(spacing: Space.s2) {
-            Image(systemName: icon).font(.system(size: 26)).foregroundStyle(TronColor.muted)
-            Text(title).font(TronFont.heading).foregroundStyle(TronColor.ink)
-            Text(message).font(TronFont.body).foregroundStyle(TronColor.muted).multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, Space.s8)
-        .padding(.horizontal, Space.s4)
-    }
-}
-
-enum DateLabel {
-    static func short(_ date: Date) -> String {
-        let cal = Calendar.current
-        if cal.isDateInToday(date) { return date.formatted(date: .omitted, time: .shortened) }
-        if cal.isDateInYesterday(date) { return "Hier" }
-        if let days = cal.dateComponents([.day], from: date, to: Date()).day, days < 7 {
-            return date.formatted(.dateTime.weekday(.abbreviated))
-        }
-        return date.formatted(.dateTime.day().month(.abbreviated))
-    }
-
-    static func duration(_ t: TimeInterval) -> String {
-        let s = Int(t.rounded())
         return String(format: "%d:%02d", s / 60, s % 60)
     }
 }

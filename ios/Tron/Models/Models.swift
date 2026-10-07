@@ -61,7 +61,7 @@ enum ActionButtonMode: String, CaseIterable, Identifiable, Codable {
     var detail: String {
         switch self {
         case .miniKeyboard: return "Le texte s'écrit tout seul au curseur. Le clavier Tron doit être affiché."
-        case .clipboard: return "Le texte est copié. Vous touchez le champ, puis Coller."
+        case .clipboard: return "Le texte est gardé dans l'historique de Tron, prêt à copier."
         }
     }
 }

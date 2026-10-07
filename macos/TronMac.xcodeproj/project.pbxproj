@@ -1,0 +1,493 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		06B167AFFE79EDAC8C441745 /* NoteDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4772BDE15693031F5E266F7F /* NoteDetailView.swift */; };
+		0BFF1BF24D6F4CEA128C9DCD /* AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F9034C15A224CB5963E8183 /* AppStore.swift */; };
+		182E46D9062C18FC19BA9DB3 /* IslandController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CD03C06981F16B3E2297D0A /* IslandController.swift */; };
+		33342FEE012A23F059642353 /* IslandView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 462EEE3AA5ED7CBD551F4E9A /* IslandView.swift */; };
+		3ECF7DF35BB67BCE837B2642 /* Rows.swift in Sources */ = {isa = PBXBuildFile; fileRef = 816D49969CC9E1F0E62FDF4F /* Rows.swift */; };
+		4E4D94C52B052C4E145B3657 /* Spectrum.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3041011FED523B183164598D /* Spectrum.swift */; };
+		5410221465044CD854115D83 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4A18008A19388E471DFB1BFB /* Assets.xcassets */; };
+		5732045DFB85FAB57BE5A3CD /* LiveText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33F0F31EA132F498594EB866 /* LiveText.swift */; };
+		60FC3432523A50D4C14F8CBB /* Paster.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C26AE018907A0101D2ED49 /* Paster.swift */; };
+		65A2C47A516FDE58AEEAE191 /* AudioRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF0153E1B0B3C8F02FB71B2 /* AudioRecorder.swift */; };
+		6A400B21706C59789875E0FD /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = C43176DEAF63A16D404C1FAC /* Models.swift */; };
+		71E4CCB6D832B5652838C0CC /* TextCleaner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B3396AE028E7B3B04AAF8AC /* TextCleaner.swift */; };
+		75A417047E6816E8FBFA686C /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F79310B559810562B819D68 /* OnboardingView.swift */; };
+		77B70D3CA2F518CA6F17BAD5 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9B56325F1EA781CE1688D7A /* Components.swift */; };
+		79833E5EDF92E3CADA6B0A81 /* TronMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BED6183DAD2D12210232230B /* TronMacApp.swift */; };
+		AA2531C9DC640212A9697F77 /* FnKeyMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5D6B9B525E15D711ABCBA0E /* FnKeyMonitor.swift */; };
+		B7A790A181EAD8E9F6D5EE37 /* Corrections.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB618A910B9B9F5C96D76375 /* Corrections.swift */; };
+		D384CE3FEA25D997DFC7C8BF /* RecordButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C9CCEB2E50CEC988050D300 /* RecordButton.swift */; };
+		D3F9D2E63198B323AD058900 /* MacDictation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D5953D47236681983F45DA3 /* MacDictation.swift */; };
+		D757A39EC7B713FE3D432EBD /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44EE01C2ABE89551901F5595 /* MainView.swift */; };
+		DA37BC1E0FAD73BD2C0837E1 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0A49C893C33DACB94E0B521 /* Theme.swift */; };
+		E6CF61FDEDE9A65514EB8F6D /* TranscriptionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C7BCC823091DC21FE047E0C /* TranscriptionEngine.swift */; };
+		EAD44B410156F8D1D7647BAE /* TronShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136AC38E0B5A302911B90918 /* TronShared.swift */; };
+		FBEDD78D78BB48C000F4895F /* Permissions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9E5EE0D5A1A33D0A626A0A3 /* Permissions.swift */; };
+		FC1D5FE0C4739D06DB4BE989 /* FluidAudio in Frameworks */ = {isa = PBXBuildFile; productRef = CFE3895F2E124A45B5110AE8 /* FluidAudio */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		136AC38E0B5A302911B90918 /* TronShared.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TronShared.swift; sourceTree = "<group>"; };
+		1D5953D47236681983F45DA3 /* MacDictation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacDictation.swift; sourceTree = "<group>"; };
+		3041011FED523B183164598D /* Spectrum.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spectrum.swift; sourceTree = "<group>"; };
+		33F0F31EA132F498594EB866 /* LiveText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LiveText.swift; path = ../ios/Shared/LiveText.swift; sourceTree = "<group>"; };
+		44EE01C2ABE89551901F5595 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
+		462EEE3AA5ED7CBD551F4E9A /* IslandView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandView.swift; sourceTree = "<group>"; };
+		4772BDE15693031F5E266F7F /* NoteDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteDetailView.swift; sourceTree = "<group>"; };
+		4A18008A19388E471DFB1BFB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		4CD03C06981F16B3E2297D0A /* IslandController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandController.swift; sourceTree = "<group>"; };
+		4F79310B559810562B819D68 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		5C7BCC823091DC21FE047E0C /* TranscriptionEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TranscriptionEngine.swift; path = ../ios/Tron/Services/TranscriptionEngine.swift; sourceTree = "<group>"; };
+		5F9034C15A224CB5963E8183 /* AppStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppStore.swift; path = ../ios/Tron/Models/AppStore.swift; sourceTree = "<group>"; };
+		77BD119704338E14BBBBDD9D /* Tron.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Tron.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		816D49969CC9E1F0E62FDF4F /* Rows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Rows.swift; path = ../ios/Tron/Home/Rows.swift; sourceTree = "<group>"; };
+		9B3396AE028E7B3B04AAF8AC /* TextCleaner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TextCleaner.swift; path = ../ios/Tron/Services/TextCleaner.swift; sourceTree = "<group>"; };
+		9C9CCEB2E50CEC988050D300 /* RecordButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordButton.swift; sourceTree = "<group>"; };
+		A3F3348363E287ADBBEF63BD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		A3F76019C49EE490C85F4607 /* Tron.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Tron.entitlements; sourceTree = "<group>"; };
+		A5D6B9B525E15D711ABCBA0E /* FnKeyMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FnKeyMonitor.swift; sourceTree = "<group>"; };
+		A9C26AE018907A0101D2ED49 /* Paster.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Paster.swift; sourceTree = "<group>"; };
+		B9B56325F1EA781CE1688D7A /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Components.swift; path = ../ios/Tron/Theme/Components.swift; sourceTree = "<group>"; };
+		BED6183DAD2D12210232230B /* TronMacApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TronMacApp.swift; sourceTree = "<group>"; };
+		C43176DEAF63A16D404C1FAC /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Models.swift; path = ../ios/Tron/Models/Models.swift; sourceTree = "<group>"; };
+		C9E5EE0D5A1A33D0A626A0A3 /* Permissions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Permissions.swift; sourceTree = "<group>"; };
+		CB618A910B9B9F5C96D76375 /* Corrections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Corrections.swift; path = ../ios/Shared/Corrections.swift; sourceTree = "<group>"; };
+		E0A49C893C33DACB94E0B521 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Theme.swift; path = ../ios/Shared/Theme.swift; sourceTree = "<group>"; };
+		FBF0153E1B0B3C8F02FB71B2 /* AudioRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AudioRecorder.swift; path = ../ios/Tron/Services/AudioRecorder.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		78FC0FABF47E23796FB21051 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FC1D5FE0C4739D06DB4BE989 /* FluidAudio in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		24C71EF432763A40F6E7AA0B /* Tron */ = {
+			isa = PBXGroup;
+			children = (
+				4A18008A19388E471DFB1BFB /* Assets.xcassets */,
+				A3F3348363E287ADBBEF63BD /* Info.plist */,
+				A3F76019C49EE490C85F4607 /* Tron.entitlements */,
+				D40890BB578F9B1954FF8107 /* App */,
+				3E7B9FDB49A669DC54F8B722 /* Home */,
+				B918E988F9D9F7B7F7D0CA79 /* Island */,
+				9176A82FC6BFE306DE3612D9 /* Onboarding */,
+				87A1ECDF184A5B8CEE19B627 /* Services */,
+			);
+			path = Tron;
+			sourceTree = "<group>";
+		};
+		3484AB1E8CCA0F1C6426E7FD /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				5F9034C15A224CB5963E8183 /* AppStore.swift */,
+				FBF0153E1B0B3C8F02FB71B2 /* AudioRecorder.swift */,
+				B9B56325F1EA781CE1688D7A /* Components.swift */,
+				CB618A910B9B9F5C96D76375 /* Corrections.swift */,
+				33F0F31EA132F498594EB866 /* LiveText.swift */,
+				C43176DEAF63A16D404C1FAC /* Models.swift */,
+				816D49969CC9E1F0E62FDF4F /* Rows.swift */,
+				9B3396AE028E7B3B04AAF8AC /* TextCleaner.swift */,
+				E0A49C893C33DACB94E0B521 /* Theme.swift */,
+				5C7BCC823091DC21FE047E0C /* TranscriptionEngine.swift */,
+			);
+			name = Core;
+			sourceTree = "<group>";
+		};
+		3E7B9FDB49A669DC54F8B722 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				44EE01C2ABE89551901F5595 /* MainView.swift */,
+				4772BDE15693031F5E266F7F /* NoteDetailView.swift */,
+				9C9CCEB2E50CEC988050D300 /* RecordButton.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		5F372C6529A0E366674578D6 = {
+			isa = PBXGroup;
+			children = (
+				3484AB1E8CCA0F1C6426E7FD /* Core */,
+				24C71EF432763A40F6E7AA0B /* Tron */,
+				7F2637A894D69736917C363D /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		7F2637A894D69736917C363D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				77BD119704338E14BBBBDD9D /* Tron.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		87A1ECDF184A5B8CEE19B627 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				A5D6B9B525E15D711ABCBA0E /* FnKeyMonitor.swift */,
+				1D5953D47236681983F45DA3 /* MacDictation.swift */,
+				A9C26AE018907A0101D2ED49 /* Paster.swift */,
+				C9E5EE0D5A1A33D0A626A0A3 /* Permissions.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		9176A82FC6BFE306DE3612D9 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				4F79310B559810562B819D68 /* OnboardingView.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		B918E988F9D9F7B7F7D0CA79 /* Island */ = {
+			isa = PBXGroup;
+			children = (
+				4CD03C06981F16B3E2297D0A /* IslandController.swift */,
+				462EEE3AA5ED7CBD551F4E9A /* IslandView.swift */,
+				3041011FED523B183164598D /* Spectrum.swift */,
+			);
+			path = Island;
+			sourceTree = "<group>";
+		};
+		D40890BB578F9B1954FF8107 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				BED6183DAD2D12210232230B /* TronMacApp.swift */,
+				136AC38E0B5A302911B90918 /* TronShared.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		45FB77C10CCCE21D3B6ED7A9 /* Tron */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 582383594008BEA4C2441958 /* Build configuration list for PBXNativeTarget "Tron" */;
+			buildPhases = (
+				860D7F395FAD895373BA1751 /* Sources */,
+				ADF67152536B79994500A2A7 /* Resources */,
+				78FC0FABF47E23796FB21051 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Tron;
+			packageProductDependencies = (
+				CFE3895F2E124A45B5110AE8 /* FluidAudio */,
+			);
+			productName = Tron;
+			productReference = 77BD119704338E14BBBBDD9D /* Tron.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		4FF94E717654F8C43CA10060 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					45FB77C10CCCE21D3B6ED7A9 = {
+						DevelopmentTeam = 52S288U9A6;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 0E4F9F54636F56310E068186 /* Build configuration list for PBXProject "TronMac" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 5F372C6529A0E366674578D6;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				DDDC085466BE0C7B3D0DFC16 /* XCRemoteSwiftPackageReference "FluidAudio" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 7F2637A894D69736917C363D /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				45FB77C10CCCE21D3B6ED7A9 /* Tron */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		ADF67152536B79994500A2A7 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5410221465044CD854115D83 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		860D7F395FAD895373BA1751 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0BFF1BF24D6F4CEA128C9DCD /* AppStore.swift in Sources */,
+				65A2C47A516FDE58AEEAE191 /* AudioRecorder.swift in Sources */,
+				77B70D3CA2F518CA6F17BAD5 /* Components.swift in Sources */,
+				B7A790A181EAD8E9F6D5EE37 /* Corrections.swift in Sources */,
+				AA2531C9DC640212A9697F77 /* FnKeyMonitor.swift in Sources */,
+				182E46D9062C18FC19BA9DB3 /* IslandController.swift in Sources */,
+				33342FEE012A23F059642353 /* IslandView.swift in Sources */,
+				5732045DFB85FAB57BE5A3CD /* LiveText.swift in Sources */,
+				D3F9D2E63198B323AD058900 /* MacDictation.swift in Sources */,
+				D757A39EC7B713FE3D432EBD /* MainView.swift in Sources */,
+				6A400B21706C59789875E0FD /* Models.swift in Sources */,
+				06B167AFFE79EDAC8C441745 /* NoteDetailView.swift in Sources */,
+				75A417047E6816E8FBFA686C /* OnboardingView.swift in Sources */,
+				60FC3432523A50D4C14F8CBB /* Paster.swift in Sources */,
+				FBEDD78D78BB48C000F4895F /* Permissions.swift in Sources */,
+				D384CE3FEA25D997DFC7C8BF /* RecordButton.swift in Sources */,
+				3ECF7DF35BB67BCE837B2642 /* Rows.swift in Sources */,
+				4E4D94C52B052C4E145B3657 /* Spectrum.swift in Sources */,
+				71E4CCB6D832B5652838C0CC /* TextCleaner.swift in Sources */,
+				DA37BC1E0FAD73BD2C0837E1 /* Theme.swift in Sources */,
+				E6CF61FDEDE9A65514EB8F6D /* TranscriptionEngine.swift in Sources */,
+				79833E5EDF92E3CADA6B0A81 /* TronMacApp.swift in Sources */,
+				EAD44B410156F8D1D7647BAE /* TronShared.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		431601DDEDEF7080A0A238E6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Tron/Tron.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 52S288U9A6;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Tron/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = app.tron.mac;
+				PRODUCT_NAME = Tron;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		C6C6F3CBF14C03AC840B7DB2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Tron/Tron.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 52S288U9A6;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Tron/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = app.tron.mac;
+				PRODUCT_NAME = Tron;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		F9405AFDF0A8B2DE33B057E9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		F99DAC93683EC4A56DC47A6C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0E4F9F54636F56310E068186 /* Build configuration list for PBXProject "TronMac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F99DAC93683EC4A56DC47A6C /* Debug */,
+				F9405AFDF0A8B2DE33B057E9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		582383594008BEA4C2441958 /* Build configuration list for PBXNativeTarget "Tron" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				431601DDEDEF7080A0A238E6 /* Debug */,
+				C6C6F3CBF14C03AC840B7DB2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		DDDC085466BE0C7B3D0DFC16 /* XCRemoteSwiftPackageReference "FluidAudio" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/FluidInference/FluidAudio";
+			requirement = {
+				kind = exactVersion;
+				version = 0.17.5;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		CFE3895F2E124A45B5110AE8 /* FluidAudio */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DDDC085466BE0C7B3D0DFC16 /* XCRemoteSwiftPackageReference "FluidAudio" */;
+			productName = FluidAudio;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 4FF94E717654F8C43CA10060 /* Project object */;
+}

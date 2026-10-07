@@ -7,20 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A1000000000000000000000A /* TronShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A50000000000000000000010 /* TronShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A10000000000000000000001 /* FluidAudio in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000002 /* FluidAudio */; };
 		A10000000000000000000004 /* TronWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A30000000000000000000010 /* TronWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A10000000000000000000005 /* TronKeyboard.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A40000000000000000000010 /* TronKeyboard.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		A1000000000000000000000A /* TronShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A50000000000000000000010 /* TronShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		A1000000000000000000000C /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = A10000000000000000000060 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = A50000000000000000000050;
-			remoteInfo = TronShare;
-		};
 		A10000000000000000000007 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = A10000000000000000000060 /* Project object */;
@@ -34,6 +27,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = A40000000000000000000050;
 			remoteInfo = TronKeyboard;
+		};
+		A1000000000000000000000C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A10000000000000000000060 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A50000000000000000000050;
+			remoteInfo = TronShare;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -54,18 +54,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		A50000000000000000000010 /* TronShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TronShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		A10000000000000000000010 /* Tron.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Tron.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A30000000000000000000010 /* TronWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TronWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		A40000000000000000000010 /* TronKeyboard.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TronKeyboard.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		A50000000000000000000010 /* TronShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TronShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		A50000000000000000000020 /* TronShare */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = TronShare;
-			sourceTree = "<group>";
-		};
 		A10000000000000000000020 /* Tron */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Tron;
@@ -86,16 +81,14 @@
 			path = TronKeyboard;
 			sourceTree = "<group>";
 		};
+		A50000000000000000000020 /* TronShare */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = TronShare;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		A50000000000000000000030 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		A10000000000000000000030 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -112,6 +105,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		A40000000000000000000030 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A50000000000000000000030 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -147,27 +147,6 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		A50000000000000000000050 /* TronShare */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = A50000000000000000000070 /* Build configuration list for PBXNativeTarget "TronShare" */;
-			buildPhases = (
-				A50000000000000000000051 /* Sources */,
-				A50000000000000000000030 /* Frameworks */,
-				A50000000000000000000052 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				A50000000000000000000020 /* TronShare */,
-				A20000000000000000000020 /* Shared */,
-			);
-			name = TronShare;
-			productName = TronShare;
-			productReference = A50000000000000000000010 /* TronShare.appex */;
-			productType = "com.apple.product-type.app-extension";
-		};
 		A10000000000000000000050 /* Tron */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = A10000000000000000000070 /* Build configuration list for PBXNativeTarget "Tron" */;
@@ -238,6 +217,27 @@
 			productReference = A40000000000000000000010 /* TronKeyboard.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		A50000000000000000000050 /* TronShare */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A50000000000000000000070 /* Build configuration list for PBXNativeTarget "TronShare" */;
+			buildPhases = (
+				A50000000000000000000051 /* Sources */,
+				A50000000000000000000030 /* Frameworks */,
+				A50000000000000000000052 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				A20000000000000000000020 /* Shared */,
+				A50000000000000000000020 /* TronShare */,
+			);
+			name = TronShare;
+			productName = TronShare;
+			productReference = A50000000000000000000010 /* TronShare.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -289,13 +289,6 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		A50000000000000000000052 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		A10000000000000000000052 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -317,16 +310,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-/* End PBXResourcesBuildPhase section */
-
-/* Begin PBXSourcesBuildPhase section */
-		A50000000000000000000051 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
+		A50000000000000000000052 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
 		A10000000000000000000051 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -348,14 +341,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A50000000000000000000051 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		A1000000000000000000000B /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = A50000000000000000000050 /* TronShare */;
-			targetProxy = A1000000000000000000000C /* PBXContainerItemProxy */;
-		};
 		A10000000000000000000006 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = A30000000000000000000050 /* TronWidget */;
@@ -366,63 +361,14 @@
 			target = A40000000000000000000050 /* TronKeyboard */;
 			targetProxy = A10000000000000000000009 /* PBXContainerItemProxy */;
 		};
+		A1000000000000000000000B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A50000000000000000000050 /* TronShare */;
+			targetProxy = A1000000000000000000000C /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		A50000000000000000000071 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = Config/TronShare.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 52S288U9A6;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "Config/TronShare-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "Corriger dans Tron";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 0.1;
-				PRODUCT_BUNDLE_IDENTIFIER = app.tron.ios.share;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SUPPORTS_MACCATALYST = NO;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
-			};
-			name = Debug;
-		};
-		A50000000000000000000072 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = Config/TronShare.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 52S288U9A6;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "Config/TronShare-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "Corriger dans Tron";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 0.1;
-				PRODUCT_BUNDLE_IDENTIFIER = app.tron.ios.share;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SUPPORTS_MACCATALYST = NO;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
-			};
-			name = Release;
-		};
 		A10000000000000000000071 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -656,18 +602,63 @@
 			};
 			name = Release;
 		};
+		A50000000000000000000071 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Config/TronShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 52S288U9A6;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Config/TronShare-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Corriger dans Tron";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = app.tron.ios.share;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		A50000000000000000000072 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Config/TronShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 52S288U9A6;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Config/TronShare-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Corriger dans Tron";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = app.tron.ios.share;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		A50000000000000000000070 /* Build configuration list for PBXNativeTarget "TronShare" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				A50000000000000000000071 /* Debug */,
-				A50000000000000000000072 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		A10000000000000000000070 /* Build configuration list for PBXNativeTarget "Tron" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -700,6 +691,15 @@
 			buildConfigurations = (
 				A40000000000000000000071 /* Debug */,
 				A40000000000000000000072 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A50000000000000000000070 /* Build configuration list for PBXNativeTarget "TronShare" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A50000000000000000000071 /* Debug */,
+				A50000000000000000000072 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

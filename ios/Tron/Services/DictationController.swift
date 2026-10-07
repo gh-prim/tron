@@ -50,13 +50,8 @@ final class DictationController: ObservableObject {
     /// Identifies the running dictation for the keyboard (live text and result).
     private var sessionID = ""
     private var liveForKeyboard = false
-    /// Live preview: text already settled, and how many samples it covers. Only the tail after it is re-read.
-    private var frozenText = ""
-    private var frozenSamples = 0
-    /// Words of the previous pass, and the words already shown. Shown text only grows:
-    /// a word appears once two passes in a row agree on it, so the cursor never steps back.
-    private var previousWords: [String] = []
-    private var shownWords: [String] = []
+    /// Live preview with a stable prefix (see LiveText).
+    private var live = LiveText()
     /// Mic kept on in the background after a keyboard dictation, so the next one starts without opening Tron.
     @Published private(set) var armed = false
     private var armedUntil = Date.distantPast
@@ -130,10 +125,7 @@ final class DictationController: ObservableObject {
         elapsed = 0
         startedAt = now
         sessionID = UUID().uuidString
-        frozenText = ""
-        frozenSamples = 0
-        previousWords = []
-        shownWords = []
+        live = LiveText()
         liveForKeyboard = mode == .keyboard || (mode == .actionButton && store.actionButtonMode == .miniKeyboard)
         lastPreview = .distantPast
         phase = .recording
@@ -357,77 +349,28 @@ final class DictationController: ObservableObject {
             publish(.recording)
         }
         // Notes only preview in the app; keyboard dictations stream to the cursor from the background too.
-        let live = mode != .note && liveForKeyboard
-        guard live || UIApplication.shared.applicationState == .active, engine.isReady else { return }
+        let streamToKeyboard = mode != .note && liveForKeyboard
+        guard streamToKeyboard || UIApplication.shared.applicationState == .active, engine.isReady else { return }
         // Refresh about every 200 ms, one pass at a time (a busy tick is simply skipped).
         guard previewTask == nil, elapsed >= 0.4, Date().timeIntervalSince(lastPreview) >= 0.2 else { return }
         lastPreview = Date()
-        let all = recorder.snapshot()
-        let rate = AudioRecorder.sampleRate
-        // Only the tail after the settled text is re-read, with 1 s of context before it.
-        let start = max(0, frozenSamples - Int(rate))
-        guard all.count > start else { return }
-        let window = Array(all[start...])
-        let context = Double(frozenSamples - start) / rate
-        let length = Double(window.count) / rate
+        guard let window = live.window(of: recorder.snapshot()) else { return }
         let language = store.language
         let session = sessionID
         let t0 = Date()
         previewTask = Task {
             defer { previewTask = nil }
-            guard let words = try? await engine.transcribeWords(window, language: language),
+            guard let words = try? await engine.transcribeWords(window.samples, language: language),
                   phase == .recording, sessionID == session else { return }
-            // Words that start in the context are already part of the settled text.
-            var tail = words.filter { $0.start >= context - 0.05 }
-            // Past 8 s of tail, settle everything up to 3 s before the end (cut between two words).
-            if length - context > 8, let cut = tail.lastIndex(where: { $0.end <= length - 3 }), cut + 1 < tail.count {
-                let settled = tail[...cut].map(\.text).joined(separator: " ")
-                frozenText = frozenText.isEmpty ? settled : frozenText + " " + settled
-                frozenSamples = start + Int(tail[cut + 1].start * rate)
-                tail = Array(tail[(cut + 1)...])
-            }
-            let current = frozenText.split(separator: " ").map(String.init) + tail.map(\.text)
-            // A word shows once two passes in a row agree on it (ignoring case and punctuation).
-            let add = Self.agreedWords(current: current, previous: previousWords, shown: shownWords)
-            previousWords = current
-            guard !add.isEmpty else { return }
-            shownWords += add
-            let text = Corrections.apply(shownWords.joined(separator: " "))
+            guard !live.ingest(words, in: window).isEmpty else { return }
+            let text = Corrections.apply(live.text)
             if ProcessInfo.processInfo.environment["TRON_LOG_PREVIEW"] != nil || Int.random(in: 0..<20) == 0 {
-                print("[Tron] preview tail=\(String(format: "%.1f", length))s asr=\(String(format: "%.2f", Date().timeIntervalSince(t0)))s thermal=\(ProcessInfo.processInfo.thermalState.rawValue)")
+                print("[Tron] preview tail=\(String(format: "%.1f", window.length))s asr=\(String(format: "%.2f", Date().timeIntervalSince(t0)))s thermal=\(ProcessInfo.processInfo.thermalState.rawValue)")
             }
             guard !text.isEmpty else { return }
             liveText = text
-            if live { publishPartial(text) }
+            if streamToKeyboard { publishPartial(text) }
         }
-    }
-
-    private static func norm(_ word: String) -> String {
-        word.lowercased().trimmingCharacters(in: .punctuationCharacters)
-    }
-
-    /// Words to append to the live text. Measured on a Mac bench (French speech replayed in real time,
-    /// 200 ms passes): words show 0.35 s after they are said, with no wrong word and nothing taken back.
-    static func agreedWords(current: [String], previous: [String], shown: [String]) -> [String] {
-        var agreed = 0
-        while agreed < min(current.count, previous.count), norm(current[agreed]) == norm(previous[agreed]) { agreed += 1 }
-        // Where the shown text ends inside this pass: aligned on the last shown word, near the expected index,
-        // since settling the start of the sentence can merge or split a word.
-        var from = shown.count
-        if let last = shown.last {
-            for p in [shown.count, shown.count - 1, shown.count + 1, shown.count - 2, shown.count + 2]
-            where p >= 1 && p <= current.count && norm(current[p - 1]) == norm(last) {
-                from = p
-                break
-            }
-        }
-        guard agreed > from else { return [] }
-        var add = Array(current[from..<agreed])
-        // Parakeet ends every clip with a period: the newest word keeps no punctuation.
-        if agreed == current.count, let last = add.last {
-            add[add.count - 1] = last.trimmingCharacters(in: CharacterSet(charactersIn: ".,;:!?…"))
-        }
-        return add
     }
 
     private func stopTimers() {

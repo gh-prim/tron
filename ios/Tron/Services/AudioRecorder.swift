@@ -7,6 +7,8 @@ final class AudioRecorder {
 
     /// Called on the main queue with a 0...1 level, about 20 times a second.
     var onLevel: ((Float) -> Void)?
+    /// Called on the audio thread with each 16 kHz chunk kept (for a frequency view).
+    var onChunk: (([Float]) -> Void)?
 
     private let engine = AVAudioEngine()
     private let lock = NSLock()
@@ -31,6 +33,7 @@ final class AudioRecorder {
         lock.lock(); samples.removeAll(keepingCapacity: true); capturing = true; lock.unlock()
         guard !isRunning else { return }
 
+        #if os(iOS)
         let session = AVAudioSession.sharedInstance()
         do {
             try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetoothHFP])
@@ -41,6 +44,7 @@ final class AudioRecorder {
             try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetoothHFP, .mixWithOthers])
             try session.setActive(true)
         }
+        #endif
 
         let input = engine.inputNode
         let inputFormat = input.outputFormat(forBus: 0)
@@ -78,7 +82,9 @@ final class AudioRecorder {
             engine.inputNode.removeTap(onBus: 0)
             engine.stop()
             isRunning = false
+            #if os(iOS)
             try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+            #endif
         }
         return snapshot()
     }
@@ -119,6 +125,7 @@ final class AudioRecorder {
         if keep { samples.append(contentsOf: chunk) }
         lock.unlock()
         guard keep else { return }
+        onChunk?(chunk)
 
         // RMS in dB, mapped to 0...1 for the waveform.
         var sum: Float = 0

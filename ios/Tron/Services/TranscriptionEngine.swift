@@ -18,7 +18,14 @@ final class TranscriptionEngine: ObservableObject {
 
     @Published private(set) var state: State = .idle
 
+    /// Smooth 0...1 progress of download plus preparation, for the progress bar.
+    @Published private(set) var progress: Double = 0
+
     private var manager: AsrManager?
+    /// Last real checkpoint, and the value the bar may creep toward until the next one.
+    private var target: Double = 0
+    private var ceiling: Double = 0
+    private var ticker: Timer?
     private var prepareTask: Task<Void, Never>?
 
     var isReady: Bool { state == .ready }
@@ -26,30 +33,62 @@ final class TranscriptionEngine: ObservableObject {
     /// Downloads (first launch only) and compiles the model. Safe to call many times.
     func prepare() {
         guard prepareTask == nil, manager == nil else { return }
+        progress = 0
+        target = 0
+        ceiling = 0.05
+        startTicker()
         prepareTask = Task { [weak self] in
             guard let self else { return }
             do {
                 self.state = .downloading(0)
                 let models = try await AsrModels.downloadAndLoad(version: .v3) { progress in
                     Task { @MainActor [weak self] in
-                        guard let self, case .downloading = self.state else { return }
+                        guard let self else { return }
+                        let f = min(1, max(0, progress.fractionCompleted)) * 0.95
+                        self.target = max(self.target, f)
                         if case .compiling = progress.phase {
-                            self.state = .loading
+                            // Compiling goes model by model and one takes most of the time:
+                            // the bar keeps moving toward the end without passing it.
+                            self.ceiling = max(self.ceiling, f + (0.95 - f) * 0.9)
+                            if case .downloading = self.state { self.state = .loading }
                         } else {
-                            self.state = .downloading(progress.fractionCompleted)
+                            self.ceiling = max(self.ceiling, f)
+                            if case .downloading = self.state { self.state = .downloading(progress.fractionCompleted) }
                         }
                     }
                 }
                 self.state = .loading
+                self.target = max(self.target, 0.95)
+                self.ceiling = 0.995
                 let manager = AsrManager(config: .default)
                 try await manager.loadModels(models)
                 self.manager = manager
+                self.progress = 1
+                self.stopTicker()
                 self.state = .ready
             } catch {
+                self.stopTicker()
                 self.state = .failed(error.localizedDescription)
             }
             self.prepareTask = nil
         }
+    }
+
+    private func startTicker() {
+        ticker?.invalidate()
+        ticker = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                guard let self else { return }
+                var next = max(self.progress, self.target)
+                if self.ceiling > next { next += (self.ceiling - next) * 0.012 }
+                self.progress = min(next, 0.999)
+            }
+        }
+    }
+
+    private func stopTicker() {
+        ticker?.invalidate()
+        ticker = nil
     }
 
     /// Waits for `prepare()` to finish (model loaded from cache in the background path).
@@ -80,11 +119,7 @@ final class TranscriptionEngine: ObservableObject {
         return result.text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    struct Word {
-        var text: String
-        var start: TimeInterval
-        var end: TimeInterval
-    }
+    typealias Word = LiveText.Word
 
     /// Same pass, as words with their timing in the clip (for the live preview's stable prefix).
     func transcribeWords(_ samples: [Float], language: SpokenLanguage) async throws -> [Word] {

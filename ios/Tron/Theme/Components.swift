@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 struct PrimaryButtonStyle: ButtonStyle {
     var fill: Color = TronColor.brand
@@ -131,7 +134,7 @@ struct TronGroup<Content: View>: View {
         VStack(alignment: .leading, spacing: 0) {
             if let header {
                 Text(header)
-                    .font(TronFont.caption.weight(.medium))
+                    .font(TronFont.sans(12, .medium))
                     .foregroundStyle(TronColor.muted)
                     .padding(.horizontal, Space.s4)
                     .padding(.top, Space.s3)
@@ -154,3 +157,89 @@ struct TronGroup<Content: View>: View {
 struct RowDivider: View {
     var body: some View { Rectangle().fill(TronColor.line).frame(height: 1) }
 }
+
+#if canImport(UIKit)
+// iOS navigation chrome (the Mac app has its own window layout).
+
+/// A pushed screen as designed: "‹ Back" text link in brand, then a large title, then the content.
+struct TronScreen<Content: View>: View {
+    let back: String
+    var title: String? = nil
+    var spacing: CGFloat = Space.s2
+    @ViewBuilder var content: Content
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: spacing) {
+                if let title {
+                    Text(title)
+                        .font(TronFont.large)
+                        .foregroundStyle(TronColor.ink)
+                        .padding(.bottom, 4)
+                        .accessibilityAddTraits(.isHeader)
+                }
+                content
+            }
+            .padding(.horizontal, Space.s4)
+            .padding(.bottom, Space.s8)
+        }
+        .background(TronColor.paper.ignoresSafeArea())
+        .navigationBarBackButtonHidden()
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar { BackLink(title: back) { dismiss() } }
+    }
+}
+
+/// A trailing toolbar item without the iOS 26 glass bubble.
+struct PlainTrailingItem<Content: View>: ToolbarContent {
+    @ViewBuilder var content: Content
+
+    var body: some ToolbarContent {
+        if #available(iOS 26, *) {
+            ToolbarItem(placement: .topBarTrailing) { content }.sharedBackgroundVisibility(.hidden)
+        } else {
+            ToolbarItem(placement: .topBarTrailing) { content }
+        }
+    }
+}
+
+/// "‹ Réglages" in the navigation bar, without the iOS 26 glass bubble.
+struct BackLink: ToolbarContent {
+    let title: String
+    let action: () -> Void
+
+    var body: some ToolbarContent {
+        if #available(iOS 26, *) {
+            item.sharedBackgroundVisibility(.hidden)
+        } else {
+            item
+        }
+    }
+
+    private var item: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            Button(action: action) {
+                HStack(spacing: 2) {
+                    Image(systemName: "chevron.left").font(.system(size: 17, weight: .semibold))
+                    Text(title).font(TronFont.bodyStrong)
+                }
+                .foregroundStyle(TronColor.brand)
+            }
+            .accessibilityLabel("Retour, \(title)")
+        }
+    }
+}
+
+/// Keeps the swipe-back gesture when a screen hides the system back button.
+extension UINavigationController: @retroactive UIGestureRecognizerDelegate {
+    override open func viewDidLoad() {
+        super.viewDidLoad()
+        interactivePopGestureRecognizer?.delegate = self
+    }
+
+    public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        viewControllers.count > 1
+    }
+}
+#endif
