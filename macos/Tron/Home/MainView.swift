@@ -58,6 +58,14 @@ struct MainView: View {
                     .font(.system(size: 22, weight: .semibold, design: .rounded))
                     .foregroundStyle(TronColor.ink)
                 Spacer()
+                if !noteBusy {
+                    SettingsLink {
+                        Image(systemName: "gearshape").font(.system(size: 15))
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(TronColor.muted)
+                    .help("Réglages et dictionnaire")
+                }
                 if noteBusy, dictation.phase == .recording {
                     HStack(spacing: Space.s2) {
                         Circle().fill(TronColor.live).frame(width: 8, height: 8)

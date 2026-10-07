@@ -11,6 +11,7 @@
 		0BFF1BF24D6F4CEA128C9DCD /* AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F9034C15A224CB5963E8183 /* AppStore.swift */; };
 		182E46D9062C18FC19BA9DB3 /* IslandController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CD03C06981F16B3E2297D0A /* IslandController.swift */; };
 		33342FEE012A23F059642353 /* IslandView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 462EEE3AA5ED7CBD551F4E9A /* IslandView.swift */; };
+		341B52269B3EAFAB34412608 /* DictionaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B9D18C3639E934C5F8F01C5 /* DictionaryView.swift */; };
 		3ECF7DF35BB67BCE837B2642 /* Rows.swift in Sources */ = {isa = PBXBuildFile; fileRef = 816D49969CC9E1F0E62FDF4F /* Rows.swift */; };
 		4E4D94C52B052C4E145B3657 /* Spectrum.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3041011FED523B183164598D /* Spectrum.swift */; };
 		5410221465044CD854115D83 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4A18008A19388E471DFB1BFB /* Assets.xcassets */; };
@@ -23,6 +24,7 @@
 		77B70D3CA2F518CA6F17BAD5 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9B56325F1EA781CE1688D7A /* Components.swift */; };
 		79833E5EDF92E3CADA6B0A81 /* TronMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BED6183DAD2D12210232230B /* TronMacApp.swift */; };
 		AA2531C9DC640212A9697F77 /* FnKeyMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5D6B9B525E15D711ABCBA0E /* FnKeyMonitor.swift */; };
+		AF972D927E97C41B24A66267 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D54C67955FAD6BC0F1844C /* SettingsView.swift */; };
 		B7A790A181EAD8E9F6D5EE37 /* Corrections.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB618A910B9B9F5C96D76375 /* Corrections.swift */; };
 		D384CE3FEA25D997DFC7C8BF /* RecordButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C9CCEB2E50CEC988050D300 /* RecordButton.swift */; };
 		D3F9D2E63198B323AD058900 /* MacDictation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D5953D47236681983F45DA3 /* MacDictation.swift */; };
@@ -39,6 +41,7 @@
 		1D5953D47236681983F45DA3 /* MacDictation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacDictation.swift; sourceTree = "<group>"; };
 		3041011FED523B183164598D /* Spectrum.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spectrum.swift; sourceTree = "<group>"; };
 		33F0F31EA132F498594EB866 /* LiveText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LiveText.swift; path = ../ios/Shared/LiveText.swift; sourceTree = "<group>"; };
+		3B9D18C3639E934C5F8F01C5 /* DictionaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictionaryView.swift; sourceTree = "<group>"; };
 		44EE01C2ABE89551901F5595 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 		462EEE3AA5ED7CBD551F4E9A /* IslandView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandView.swift; sourceTree = "<group>"; };
 		4772BDE15693031F5E266F7F /* NoteDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteDetailView.swift; sourceTree = "<group>"; };
@@ -49,6 +52,7 @@
 		5F9034C15A224CB5963E8183 /* AppStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppStore.swift; path = ../ios/Tron/Models/AppStore.swift; sourceTree = "<group>"; };
 		77BD119704338E14BBBBDD9D /* Tron.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Tron.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		816D49969CC9E1F0E62FDF4F /* Rows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Rows.swift; path = ../ios/Tron/Home/Rows.swift; sourceTree = "<group>"; };
+		84D54C67955FAD6BC0F1844C /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		9B3396AE028E7B3B04AAF8AC /* TextCleaner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TextCleaner.swift; path = ../ios/Tron/Services/TextCleaner.swift; sourceTree = "<group>"; };
 		9C9CCEB2E50CEC988050D300 /* RecordButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordButton.swift; sourceTree = "<group>"; };
 		A3F3348363E287ADBBEF63BD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -76,6 +80,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		191B72983667141FCEEB550C /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				3B9D18C3639E934C5F8F01C5 /* DictionaryView.swift */,
+				84D54C67955FAD6BC0F1844C /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
 		24C71EF432763A40F6E7AA0B /* Tron */ = {
 			isa = PBXGroup;
 			children = (
@@ -87,6 +100,7 @@
 				B918E988F9D9F7B7F7D0CA79 /* Island */,
 				9176A82FC6BFE306DE3612D9 /* Onboarding */,
 				87A1ECDF184A5B8CEE19B627 /* Services */,
+				191B72983667141FCEEB550C /* Settings */,
 			);
 			path = Tron;
 			sourceTree = "<group>";
@@ -253,6 +267,7 @@
 				65A2C47A516FDE58AEEAE191 /* AudioRecorder.swift in Sources */,
 				77B70D3CA2F518CA6F17BAD5 /* Components.swift in Sources */,
 				B7A790A181EAD8E9F6D5EE37 /* Corrections.swift in Sources */,
+				341B52269B3EAFAB34412608 /* DictionaryView.swift in Sources */,
 				AA2531C9DC640212A9697F77 /* FnKeyMonitor.swift in Sources */,
 				182E46D9062C18FC19BA9DB3 /* IslandController.swift in Sources */,
 				33342FEE012A23F059642353 /* IslandView.swift in Sources */,
@@ -266,6 +281,7 @@
 				FBEDD78D78BB48C000F4895F /* Permissions.swift in Sources */,
 				D384CE3FEA25D997DFC7C8BF /* RecordButton.swift in Sources */,
 				3ECF7DF35BB67BCE837B2642 /* Rows.swift in Sources */,
+				AF972D927E97C41B24A66267 /* SettingsView.swift in Sources */,
 				4E4D94C52B052C4E145B3657 /* Spectrum.swift in Sources */,
 				71E4CCB6D832B5652838C0CC /* TextCleaner.swift in Sources */,
 				DA37BC1E0FAD73BD2C0837E1 /* Theme.swift in Sources */,

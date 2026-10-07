@@ -18,6 +18,11 @@ struct TronMacApp: App {
         .defaultSize(width: 960, height: 640)
         .windowToolbarStyle(.unifiedCompact)
 
+        Settings {
+            SettingsView()
+                .environmentObject(AppStore.shared)
+        }
+
         MenuBarExtra("Tron", systemImage: "waveform") {
             Text(status)
             Divider()
@@ -39,6 +44,7 @@ struct TronMacApp: App {
                 openWindow(id: "main")
                 NSApp.activate(ignoringOtherApps: true)
             }
+            SettingsLink { Text("Réglages et dictionnaire…") }
             Button("Autorisations…") { delegate.showOnboarding() }
             Divider()
             Button("Quitter Tron") { NSApp.terminate(nil) }
